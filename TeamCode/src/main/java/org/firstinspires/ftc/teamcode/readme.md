@@ -8,6 +8,8 @@ process for adding OpModes is straightforward.
 
 ## Creating your own OpModes
 
+## adb connect 192.168.43.1:5555
+
 The easiest way to create your own OpMode is to copy a Sample OpMode and make it your own.
 
 Sample opmodes exist in the FtcRobotController module.
