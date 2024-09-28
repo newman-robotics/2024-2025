@@ -45,8 +45,8 @@ public class Main_tele_op extends LinearOpMode {
     private DcMotor leftBackDrive = null;
     private DcMotor rightFrontDrive = null;
     private DcMotor rightBackDrive = null;
-    private DcMotor rightarm = null;
-    private DcMotor leftarm = null;
+    //private DcMotor rightarm = null;
+    //private DcMotor leftarm = null;
     static final double INCREMENT   = 0.05;     // amount to slew servo each CYCLE_MS cycle
     static final int    CYCLE_MS    =   50;     // period of each cycle
     static final double MAX_POS     =  0.5;     // Maximum rotational position
@@ -81,13 +81,13 @@ public class Main_tele_op extends LinearOpMode {
         leftBackDrive  = hardwareMap.get(DcMotor.class, "drivebl");
         rightFrontDrive = hardwareMap.get(DcMotor.class, "drivefr");
         rightBackDrive = hardwareMap.get(DcMotor.class, "drivebr");
-        leftarm = hardwareMap.get(DcMotor.class, "armbl");
-        rightarm = hardwareMap.get(DcMotor.class, "armbr");
+        //leftarm = hardwareMap.get(DcMotor.class, "armbl");
+        //rightarm = hardwareMap.get(DcMotor.class, "armbr");
         // Connect to servo (Assume Robot Left Hand)
         // Change the text in quotes to match any servo name on your robot.
-        servo = hardwareMap.get(Servo.class, "rclaw");
-        servo2 = hardwareMap.get(Servo.class, "lclaw");
-        servo3 = hardwareMap.get(Servo.class, "yuta");
+        //servo = hardwareMap.get(Servo.class, "rclaw");
+        //servo2 = hardwareMap.get(Servo.class, "lclaw");
+        //servo3 = hardwareMap.get(Servo.class, "yuta");
 
         // ########################################################################################
         // !!!            IMPORTANT Drive Information. Test your motor directions.            !!!!!
@@ -103,8 +103,8 @@ public class Main_tele_op extends LinearOpMode {
         leftBackDrive.setDirection(DcMotor.Direction.REVERSE);
         rightFrontDrive.setDirection(DcMotor.Direction.FORWARD);
         rightBackDrive.setDirection(DcMotor.Direction.FORWARD);
-        rightarm.setDirection(DcMotor.Direction.REVERSE);
-        leftarm.setDirection(DcMotor.Direction.REVERSE);
+        //rightarm.setDirection(DcMotor.Direction.REVERSE);
+        //leftarm.setDirection(DcMotor.Direction.REVERSE);
 
 
         // Wait for the game to start (driver presses PLAY)
@@ -250,7 +250,7 @@ public class Main_tele_op extends LinearOpMode {
                 powermoter2 -= .1f;
             }
 
-            if (arm) {
+            /*if (arm) {
                 leftarm.setPower(powermotor);
                 rightarm.setPower(powermoter2);
             }
@@ -261,7 +261,7 @@ public class Main_tele_op extends LinearOpMode {
 
             else {
                 leftarm.setPower(0.2);
-                rightarm.setPower(0.2);
+                rightarm.setPower(0.2);*/
 
                 // if (X) {
                 //   leftarm.setPower(0.2);
@@ -279,26 +279,26 @@ public class Main_tele_op extends LinearOpMode {
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
-            telemetry.addData("Front left/Right", "%4.2f, %4.2f", leftFrontPower, rightFrontPower);
-            telemetry.addData("Back  left/Right", "%4.2f, %4.2f", leftBackPower, rightBackPower);
-            telemetry.addData("slow", slow);
+            //telemetry.addData("Front left/Right", "%4.2f, %4.2f", leftFrontPower, rightFrontPower);
+            //telemetry.addData("Back  left/Right", "%4.2f, %4.2f", leftBackPower, rightBackPower);
+            //telemetry.addData("slow", slow);
             // Display the current value
             telemetry.addData("Servo Position", "%5.2f", position);
-            telemetry.addData("Arm true", arm);
-            telemetry.addData("Arm2 true", arm2);
+            //telemetry.addData("Arm true", arm);
+            //telemetry.addData("Arm2 true", arm2);
             telemetry.addData(">", "Press Stop to end test." );
 
             // Set the servo to the new position and pause;
-            servo.setPosition(0.2-position);
-            servo2.setPosition(position);
-            servo3.setPosition(position2);
+            //servo.setPosition(0.2-position);
+            //servo2.setPosition(position);
+            //servo3.setPosition(position2);
             sleep(CYCLE_MS);
             idle();
         }
 
         //Signal done;
-        telemetry.addData(">", "Done");
-        telemetry.update();
+        //telemetry.addData(">", "Done");
+        //telemetry.update();
     }
 
-}
+//}
