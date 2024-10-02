@@ -5,6 +5,14 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+
+/*
+drivebr = 0
+drivefr = 0
+drivefl = 0
+drivebl = 0
+*/
+
 //Whatever the name is will appear in the driver hub select display
 @TeleOp(name="New_Code_Juju")
 public class NotCopiedDrive extends LinearOpMode {
@@ -40,8 +48,8 @@ public class NotCopiedDrive extends LinearOpMode {
 
             //creating variables that trigger when a button on the control is pressed
             double max;
-            double axial = -gamepad1.left_stick_y;  //pushing stick forward gives negative value so we have to make it negetive
-            double lateral = gamepad1.left_stick_x;
+            double axial = -gamepad1.left_stick_x;  //pushing stick forward gives negative value so we have to make it negetive
+            double lateral = gamepad1.left_stick_y; //we swaped the x and y
             double yaw = gamepad1.right_stick_x;
             boolean slow = gamepad1.a;
 
