@@ -1,0 +1,127 @@
+package org.firstinspires.ftc.teamcode.autonomous;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import com.qualcomm.robotcore.hardware.HardwareMap;
+
+import org.firstinspires.ftc.robotcore.external.ClassFactory;
+import org.firstinspires.ftc.robotcore.external.android.util.Size;
+import org.firstinspires.ftc.robotcore.external.function.Continuation;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.Camera;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraCaptureRequest;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraCaptureSequenceId;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraCaptureSession;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraException;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.internal.system.Deadline;
+import org.firstinspires.ftc.vision.apriltag.AprilTagLibrary;
+import org.opencv.core.Mat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.Locale;
+import java.util.concurrent.TimeUnit;
+
+import edu.umich.eecs.april.apriltag.ApriltagDetection;
+import edu.umich.eecs.april.apriltag.ApriltagNative;
+
+/**
+ * Static functions related to the camera.
+ * **/
+public class CameraHandler {
+    /**
+     * What it says on the tin.
+     * **/
+    private static final Logger cameraLogger = LoggerFactory.getLogger("Camera");
+
+    /**
+     * Field coordinate system:
+     * All coordinates range from 0 to 1.
+     * X runs from the blue basket to the red parking zone.
+     * Y runs from the blue basket to the blue parking zone.
+     * Therefore, (0, 0) is at the blue basket, (1, 0) is at
+     * the red parking zone, (0, 1) is at the blue parking
+     * zone, and (1, 1) is at the red basket.
+     * Why is it like this? I don't know! I made it up!
+     * **/
+    public static class FieldPos {
+        public final double x;
+        public final double y;
+
+        public FieldPos(double x, double y) {
+            this.x = x;
+            this.y = y;
+        }
+    }
+
+    /**
+     * Creates a camera. Also sets it up with the given frame callback.
+     * That way, I don't have to worry about it later.
+     *
+     * @param map The invoking OpMode's hardware map.
+     * @param frameCallback A function wrapper to process frames.
+     * @return The created camera. Possibly not necessary, but good to have nonetheless.
+     * **/
+    public static Camera createCamera(HardwareMap map, int xSize, int ySize, CameraCaptureSession.CaptureCallback frameCallback) throws CameraException {
+        WebcamName name = map.get(WebcamName.class, "webcam");
+        Camera camera = ClassFactory.getInstance().getCameraManager().requestPermissionAndOpenCamera(new Deadline(5000, TimeUnit.MILLISECONDS), name, null);
+        CameraCaptureRequest request = camera.createCaptureRequest(20, new Size(xSize, ySize), 30);
+        CameraCaptureSession session = camera.createCaptureSession(Continuation.createTrivial(
+                new CameraCaptureSession.StateCallback(){
+                    @Override
+                    public void onConfigured(@NonNull CameraCaptureSession session) {
+                        try {
+                            session.startCapture(request, Continuation.createTrivial(frameCallback), Continuation.createTrivial(new CameraCaptureSession.StatusCallback(){
+                                @Override
+                                public void onCaptureSequenceCompleted(@NonNull CameraCaptureSession session, CameraCaptureSequenceId cameraCaptureSequenceId, long lastFrameNumber) {
+
+                                }
+                            }));
+                        } catch (CameraException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+
+                    @Override
+                    public void onClosed(@NonNull CameraCaptureSession session) {
+
+                    }
+                }
+        ));
+        return camera;
+    }
+
+    /**
+     * Tries to determine the location of the robot from the given tag. Currently unable to utilise multiple tags.
+     * @param tag The tag.
+     * @return The location of the robot on the field, or null if it could not be determined.
+     * **/
+    @Nullable
+    private static FieldPos getLocationFromDetection(ApriltagDetection tag) {
+        cameraLogger.debug(String.format(Locale.UK, "Detection: centre (%f, %f), corners [(%f, %f), (%f, %f), (%f, %f), (%f, %f)]", tag.c[0], tag.c[1], tag.p[0], tag.p[1], tag.p[2], tag.p[3], tag.p[4], tag.p[5], tag.p[6], tag.p[7]));
+        return null;
+    }
+
+    /**
+     * Calculates the robot's position on the field from a camera frame.
+     * @param frame The frame from the camera. Must be in YUV/YCbCr format.
+     * @return The location of the robot on the field, or null if it could not be determined.
+     * **/
+    @Nullable
+    public static FieldPos getLocationOnBoard(Mat frame) {
+        ApriltagNative.native_init();
+        //idk if these configs are right but let's pray...
+        ApriltagNative.apriltag_init("36h11", 0, 8, 0, 4);
+        int length = (int)(frame.elemSize() * frame.total());
+        byte[] buffer = new byte[length];
+        frame.get(0, 0, buffer);
+        ArrayList<ApriltagDetection> tags = ApriltagNative.apriltag_detect_yuv(buffer, frame.cols(), frame.rows());
+        for (ApriltagDetection tag : tags) {
+            FieldPos position = getLocationFromDetection(tag);
+            if (position != null) return position;
+        }
+        return null;
+    }
+}
