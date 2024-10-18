@@ -15,7 +15,6 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraCaptureSes
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraException;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.internal.system.Deadline;
-import org.firstinspires.ftc.vision.apriltag.AprilTagLibrary;
 import org.opencv.core.Mat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,6 +58,7 @@ public class CameraHandler {
     /**
      * Creates a camera. Also sets it up with the given frame callback.
      * That way, I don't have to worry about it later.
+     * NOTE TO SELF: The camera must be named "webcam".
      *
      * @param map The invoking OpMode's hardware map.
      * @param frameCallback A function wrapper to process frames.
@@ -68,11 +68,13 @@ public class CameraHandler {
         WebcamName name = map.get(WebcamName.class, "webcam");
         Camera camera = ClassFactory.getInstance().getCameraManager().requestPermissionAndOpenCamera(new Deadline(5000, TimeUnit.MILLISECONDS), name, null);
         CameraCaptureRequest request = camera.createCaptureRequest(20, new Size(xSize, ySize), 30);
+        cameraLogger.info("About to create camera capture session");
         CameraCaptureSession session = camera.createCaptureSession(Continuation.createTrivial(
                 new CameraCaptureSession.StateCallback(){
                     @Override
                     public void onConfigured(@NonNull CameraCaptureSession session) {
                         try {
+                            cameraLogger.info("onConfigured()...");
                             session.startCapture(request, Continuation.createTrivial(frameCallback), Continuation.createTrivial(new CameraCaptureSession.StatusCallback(){
                                 @Override
                                 public void onCaptureSequenceCompleted(@NonNull CameraCaptureSession session, CameraCaptureSequenceId cameraCaptureSequenceId, long lastFrameNumber) {
@@ -100,7 +102,7 @@ public class CameraHandler {
      * **/
     @Nullable
     private static FieldPos getLocationFromDetection(ApriltagDetection tag) {
-        cameraLogger.debug(String.format(Locale.UK, "Detection: centre (%f, %f), corners [(%f, %f), (%f, %f), (%f, %f), (%f, %f)]", tag.c[0], tag.c[1], tag.p[0], tag.p[1], tag.p[2], tag.p[3], tag.p[4], tag.p[5], tag.p[6], tag.p[7]));
+        cameraLogger.debug(String.format(Locale.UK, "Detection: ID %d, centre (%f, %f), corners [(%f, %f), (%f, %f), (%f, %f), (%f, %f)]", tag.id, tag.c[0], tag.c[1], tag.p[0], tag.p[1], tag.p[2], tag.p[3], tag.p[4], tag.p[5], tag.p[6], tag.p[7]));
         return null;
     }
 
@@ -111,7 +113,6 @@ public class CameraHandler {
      * **/
     @Nullable
     public static FieldPos getLocationOnBoard(Mat frame) {
-        ApriltagNative.native_init();
         //idk if these configs are right but let's pray...
         ApriltagNative.apriltag_init("36h11", 0, 8, 0, 4);
         int length = (int)(frame.elemSize() * frame.total());

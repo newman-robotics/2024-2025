@@ -84,6 +84,7 @@ public class NotCopiedDrive extends LinearOpMode {
                 leftFrontDrive.setPower(leftFrontPower);
                 rightFrontDrive.setPower(rightFrontPower);
                 leftBackDrive.setPower(leftBackPower);
+                // TODO: (picawawa4000) I won't change anything, but this is poor form. You should reverse the direction of the motor instead.
                 rightBackDrive.setPower(-rightBackPower);
             }
 
