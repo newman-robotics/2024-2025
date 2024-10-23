@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.android.util.Size;
@@ -31,11 +32,6 @@ import edu.umich.eecs.april.apriltag.ApriltagNative;
  * **/
 public class CameraHandler {
     /**
-     * What it says on the tin.
-     * **/
-    private static final Logger cameraLogger = LoggerFactory.getLogger("Camera");
-
-    /**
      * Field coordinate system:
      * All coordinates range from 0 to 1.
      * X runs from the blue basket to the red parking zone.
@@ -61,6 +57,8 @@ public class CameraHandler {
      * NOTE TO SELF: The camera must be named "webcam".
      *
      * @param map The invoking OpMode's hardware map.
+     * @param xSize The width of the capture.
+     * @param ySize The height of the capture.
      * @param frameCallback A function wrapper to process frames.
      * @return The created camera. Possibly not necessary, but good to have nonetheless.
      * **/
@@ -68,13 +66,15 @@ public class CameraHandler {
         WebcamName name = map.get(WebcamName.class, "webcam");
         Camera camera = ClassFactory.getInstance().getCameraManager().requestPermissionAndOpenCamera(new Deadline(5000, TimeUnit.MILLISECONDS), name, null);
         CameraCaptureRequest request = camera.createCaptureRequest(20, new Size(xSize, ySize), 30);
-        cameraLogger.info("About to create camera capture session");
+        RobotLog.i("About to create camera capture session");
         CameraCaptureSession session = camera.createCaptureSession(Continuation.createTrivial(
                 new CameraCaptureSession.StateCallback(){
                     @Override
                     public void onConfigured(@NonNull CameraCaptureSession session) {
                         try {
-                            cameraLogger.info("onConfigured()...");
+                            RobotLog.i("onConfigured()...");
+                            int[] androidFormats = session.getCamera().getCameraName().getCameraCharacteristics().getAndroidFormats();
+                            for (int androidFormat : androidFormats) RobotLog.i(String.format(Locale.UK, "%d", androidFormat));
                             session.startCapture(request, Continuation.createTrivial(frameCallback), Continuation.createTrivial(new CameraCaptureSession.StatusCallback(){
                                 @Override
                                 public void onCaptureSequenceCompleted(@NonNull CameraCaptureSession session, CameraCaptureSequenceId cameraCaptureSequenceId, long lastFrameNumber) {
@@ -102,7 +102,7 @@ public class CameraHandler {
      * **/
     @Nullable
     private static FieldPos getLocationFromDetection(ApriltagDetection tag) {
-        cameraLogger.debug(String.format(Locale.UK, "Detection: ID %d, centre (%f, %f), corners [(%f, %f), (%f, %f), (%f, %f), (%f, %f)]", tag.id, tag.c[0], tag.c[1], tag.p[0], tag.p[1], tag.p[2], tag.p[3], tag.p[4], tag.p[5], tag.p[6], tag.p[7]));
+        RobotLog.d(String.format(Locale.UK, "Detection: ID %d, centre (%f, %f), corners [(%f, %f), (%f, %f), (%f, %f), (%f, %f)]", tag.id, tag.c[0], tag.c[1], tag.p[0], tag.p[1], tag.p[2], tag.p[3], tag.p[4], tag.p[5], tag.p[6], tag.p[7]));
         return null;
     }
 

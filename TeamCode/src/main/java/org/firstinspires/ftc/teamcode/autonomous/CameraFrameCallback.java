@@ -57,16 +57,11 @@ public class CameraFrameCallback implements CameraCaptureSession.CaptureCallback
      * @return A CameraStreamSource that can be uploaded to the CameraStreamServer.
      * **/
     public CameraStreamSource getCameraStreamSource() {
-        return new CameraStreamSource() {
+        return continuation -> continuation.dispatch(new ContinuationResult<org.firstinspires.ftc.robotcore.external.function.Consumer<Bitmap>>() {
             @Override
-            public void getFrameBitmap(Continuation<? extends org.firstinspires.ftc.robotcore.external.function.Consumer<Bitmap>> continuation) {
-                continuation.dispatch(new ContinuationResult<org.firstinspires.ftc.robotcore.external.function.Consumer<Bitmap>>() {
-                    @Override
-                    public void handle(org.firstinspires.ftc.robotcore.external.function.Consumer<Bitmap> bitmapConsumer) {
-                        bitmapConsumer.accept(CameraFrameCallback.this.lastBitmap);
-                    }
-                });
+            public void handle(org.firstinspires.ftc.robotcore.external.function.Consumer<Bitmap> bitmapConsumer) {
+                bitmapConsumer.accept(CameraFrameCallback.this.lastBitmap);
             }
-        };
+        });
     }
 }
