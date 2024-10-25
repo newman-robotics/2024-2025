@@ -1,5 +1,8 @@
 package org.firstinspires.ftc.teamcode.autonomous;
 
+//Enables a hacky fix for the null camera problem.
+#define USE_REFLECTION
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -92,10 +95,15 @@ public class CameraHandler {
                                     cameraField.setAccessible(true);
                                     Camera sessionCamera = (Camera)cameraField.get((DelegatingCaptureSession)session);
                                     RobotLog.i("camera is: " + sessionCamera);
-                                    Method setCameraMethod = DelegatingCamera.class.getDeclaredMethod("changeDelegatedCamera", Camera.class);
-                                    setCameraMethod.setAccessible(true);
-                                    setCameraMethod.invoke(sessionCamera, camera);
-                                    RobotLog.i("set delegated camera of " + sessionCamera + " to " + camera);
+                                    if (camera.getCameraName().isWebcam()) {
+                                        RobotLog.i("base camera name is webcam, attempting to force it into delegating camera...");
+                                        Method setCameraMethod = DelegatingCamera.class.getDeclaredMethod("changeDelegatedCamera", Camera.class);
+                                        setCameraMethod.setAccessible(true);
+                                        setCameraMethod.invoke(sessionCamera, camera);
+                                        RobotLog.i("set delegated camera of " + sessionCamera + " to " + camera);
+                                    } else {
+                                        RobotLog.i("base camera is not webcam...");
+                                    }
                                 } catch (NoSuchFieldException e) {
                                     RobotLog.w("session is an instance of DelegatingCaptureSession, but does not contain field camera!\n" + e);
                                 } catch (IllegalAccessException e) {

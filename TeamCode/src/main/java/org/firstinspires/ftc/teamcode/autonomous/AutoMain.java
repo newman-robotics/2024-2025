@@ -1,8 +1,5 @@
 package org.firstinspires.ftc.teamcode.autonomous;
 
-//enables a very hacky solution to the problem of the camera not being set
-#define USE_REFLECTION
-
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
