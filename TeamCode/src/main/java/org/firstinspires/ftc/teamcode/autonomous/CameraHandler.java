@@ -3,6 +3,8 @@ package org.firstinspires.ftc.teamcode.autonomous;
 //Enables a hacky fix for the null camera problem.
 #define USE_REFLECTION
 
+import android.graphics.ImageFormat;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -77,7 +79,7 @@ public class CameraHandler {
     public static Camera createCamera(HardwareMap map, int xSize, int ySize, CameraCaptureSession.CaptureCallback frameCallback) throws CameraException {
         WebcamName name = map.get(WebcamName.class, "webcam");
         Camera camera = ClassFactory.getInstance().getCameraManager().requestPermissionAndOpenCamera(new Deadline(5000, TimeUnit.MILLISECONDS), name, null);
-        CameraCaptureRequest request = camera.createCaptureRequest(20, new Size(xSize, ySize), 30);
+        CameraCaptureRequest request = camera.createCaptureRequest(ImageFormat.YUY2, new Size(xSize, ySize), 30);
         RobotLog.i("About to create camera capture session");
         CameraCaptureSession session = camera.createCaptureSession(Continuation.createTrivial(
                 new CameraCaptureSession.StateCallback(){

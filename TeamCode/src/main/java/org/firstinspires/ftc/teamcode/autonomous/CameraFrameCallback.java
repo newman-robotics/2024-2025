@@ -44,12 +44,9 @@ public class CameraFrameCallback implements CameraCaptureSession.CaptureCallback
      * **/
     @Override
     public void onNewFrame(@NonNull CameraCaptureSession session, @NonNull CameraCaptureRequest request, @NonNull CameraFrame cameraFrame) {
-        //If cameraFrame is already YCbCr, I will lose it...
         cameraFrame.copyToBitmap(this.lastBitmap);
-        Mat rgbFrame = new Mat(this.xSize, this.ySize, CvType.CV_8U, ByteBuffer.wrap(cameraFrame.getImageData()));
-        Mat yuvFrame = new Mat(this.xSize, this.ySize, CvType.CV_8U);
-        Imgproc.cvtColor(rgbFrame, yuvFrame, Imgproc.COLOR_RGB2YUV);
-        callback.accept(yuvFrame);
+        Mat cvFrame = new Mat(this.xSize, this.ySize, CvType.CV_8U);
+        callback.accept(cvFrame);
     }
 
     /**
