@@ -39,7 +39,7 @@ public class SimpleAutonomous extends LinearOpMode {
      * **/
     public void tryWait(long millis) throws OpModeInterruptedException {
         long targetTime = System.currentTimeMillis() + millis;
-        while (System.currentTimeMillis() != targetTime) if (!this.opModeIsActive()) throw new OpModeInterruptedException("SimpleAutonomous::tryWait");
+        while (System.currentTimeMillis() != targetTime) if (!this.opModeIsActive()) throw new OpModeInterruptedException();
     }
 
     /**
@@ -110,6 +110,11 @@ public class SimpleAutonomous extends LinearOpMode {
         this.backRight = this.hardwareMap.get(DcMotor.class, "drivebr");
 
         this.backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        this.frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        this.frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        this.backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        this.backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         this.waitForStart();
 

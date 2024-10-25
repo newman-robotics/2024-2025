@@ -21,9 +21,13 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.internal.camera.delegating.DelegatingCamera;
 import org.firstinspires.ftc.robotcore.internal.camera.delegating.DelegatingCaptureSession;
 import org.firstinspires.ftc.robotcore.internal.system.Deadline;
+import org.opencv.calib3d.Calib3d;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.opencv.core.MatOfDouble;
+import org.opencv.core.MatOfPoint2f;
+import org.opencv.core.MatOfPoint3f;
+import org.opencv.core.Point3;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -73,8 +77,6 @@ public class CameraHandler {
     public static Camera createCamera(HardwareMap map, int xSize, int ySize, CameraCaptureSession.CaptureCallback frameCallback) throws CameraException {
         WebcamName name = map.get(WebcamName.class, "webcam");
         Camera camera = ClassFactory.getInstance().getCameraManager().requestPermissionAndOpenCamera(new Deadline(5000, TimeUnit.MILLISECONDS), name, null);
-        if (camera instanceof DelegatingCamera) RobotLog.i("Camera is delegating! Crap!");
-        else RobotLog.i("Camera is not delegating! Maybe we can use that as an exploit...");
         CameraCaptureRequest request = camera.createCaptureRequest(20, new Size(xSize, ySize), 30);
         RobotLog.i("About to create camera capture session");
         CameraCaptureSession session = camera.createCaptureSession(Continuation.createTrivial(
@@ -83,11 +85,13 @@ public class CameraHandler {
                     public void onConfigured(@NonNull CameraCaptureSession session) {
                         try {
                             RobotLog.i("onConfigured()...");
+                            /*
                             RobotLog.i("Camera = " + session.getCamera().getCameraName());
                             int[] androidFormats = session.getCamera().getCameraName().getCameraCharacteristics().getAndroidFormats();
                             for (int androidFormat : androidFormats) RobotLog.i(String.format(Locale.UK, "%d", androidFormat));
+                            */
+
                             #if USE_REFLECTION
-                            //here comes the unsafe stuff!
                             if (session instanceof DelegatingCaptureSession) {
                                 try {
                                     RobotLog.i("Here goes nothing!");
@@ -115,6 +119,7 @@ public class CameraHandler {
                                 }
                             }
                             #endif //USE_REFLECTION
+
                             session.startCapture(request, Continuation.createTrivial(frameCallback), Continuation.createTrivial(new CameraCaptureSession.StatusCallback(){
                                 @Override
                                 public void onCaptureSequenceCompleted(@NonNull CameraCaptureSession session, CameraCaptureSequenceId cameraCaptureSequenceId, long lastFrameNumber) {
@@ -144,6 +149,10 @@ public class CameraHandler {
     @Nullable
     private static FieldPos getLocationFromDetection(ApriltagDetection tag) {
         RobotLog.d(String.format(Locale.UK, "Detection: ID %d, centre (%f, %f), corners [(%f, %f), (%f, %f), (%f, %f), (%f, %f)]", tag.id, tag.c[0], tag.c[1], tag.p[0], tag.p[1], tag.p[2], tag.p[3], tag.p[4], tag.p[5], tag.p[6], tag.p[7]));
+        /*
+        Mat rvec = new Mat(1, 3, CvType.CV_32F), tvec = new Mat(1, 3, CvType.CV_32F);
+        boolean out = Calib3d.solvePnP(new MatOfPoint3f(), new MatOfPoint2f(), new Mat(), new MatOfDouble(), rvec, tvec);
+        */
         return null;
     }
 
