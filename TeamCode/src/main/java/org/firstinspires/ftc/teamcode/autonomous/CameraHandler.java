@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode.autonomous;
 
-//Enables a hacky fix for the null camera problem.
-#define USE_REFLECTION
+//Enables a hacky "fix" for the null camera problem.
+//#define USE_REFLECTION
 
 import android.graphics.ImageFormat;
 
@@ -79,67 +79,51 @@ public class CameraHandler {
     public static Camera createCamera(HardwareMap map, int xSize, int ySize, CameraCaptureSession.CaptureCallback frameCallback) throws CameraException {
         WebcamName name = map.get(WebcamName.class, "webcam");
         Camera camera = ClassFactory.getInstance().getCameraManager().requestPermissionAndOpenCamera(new Deadline(5000, TimeUnit.MILLISECONDS), name, null);
-        CameraCaptureRequest request = camera.createCaptureRequest(ImageFormat.YUY2, new Size(xSize, ySize), 30);
-        RobotLog.i("About to create camera capture session");
-        CameraCaptureSession session = camera.createCaptureSession(Continuation.createTrivial(
-                new CameraCaptureSession.StateCallback(){
-                    @Override
-                    public void onConfigured(@NonNull CameraCaptureSession session) {
+        RobotLog.i("About to create camera capture session with camera = " + camera);
+        CameraCaptureSession session = camera.createCaptureSession(Continuation.createTrivial(new CameraCaptureSession.StateCallback(){
+            @Override
+            public void onConfigured(@NonNull CameraCaptureSession session) {
+                try {
+                    #if USE_REFLECTION
+                    if (session instanceof DelegatingCaptureSession) {
                         try {
-                            RobotLog.i("onConfigured()...");
-                            /*
-                            RobotLog.i("Camera = " + session.getCamera().getCameraName());
-                            int[] androidFormats = session.getCamera().getCameraName().getCameraCharacteristics().getAndroidFormats();
-                            for (int androidFormat : androidFormats) RobotLog.i(String.format(Locale.UK, "%d", androidFormat));
-                            */
-
-                            #if USE_REFLECTION
-                            if (session instanceof DelegatingCaptureSession) {
-                                try {
-                                    RobotLog.i("Here goes nothing!");
-                                    Field cameraField = DelegatingCaptureSession.class.getDeclaredField("camera");
-                                    cameraField.setAccessible(true);
-                                    Camera sessionCamera = (Camera)cameraField.get((DelegatingCaptureSession)session);
-                                    RobotLog.i("camera is: " + sessionCamera);
-                                    if (!(camera instanceof DelegatingCamera)) {
-                                        RobotLog.i("base camera name is webcam, attempting to force it into delegating camera...");
-                                        Method setCameraMethod = DelegatingCamera.class.getDeclaredMethod("changeDelegatedCamera", Camera.class);
-                                        setCameraMethod.setAccessible(true);
-                                        setCameraMethod.invoke(sessionCamera, camera);
-                                        RobotLog.i("set delegated camera of " + sessionCamera + " to " + camera);
-                                    } else {
-                                        RobotLog.i("base camera is not webcam...");
-                                    }
-                                } catch (NoSuchFieldException e) {
-                                    RobotLog.w("session is an instance of DelegatingCaptureSession, but does not contain field camera!\n" + e);
-                                } catch (IllegalAccessException e) {
-                                    RobotLog.w("illegal access!\n" + e);
-                                } catch (NoSuchMethodException e) {
-                                    RobotLog.w("changeDelegatedCamera does not exist!\n" + e);
-                                } catch (InvocationTargetException e) {
-                                    RobotLog.w("invocation target something-or-othered!\n" + e);
-                                }
+                            RobotLog.i("Here goes nothing!");
+                            if (!(camera instanceof DelegatingCamera)) {
+                                RobotLog.i("base camera name is webcam, attempting to force it into delegating camera...");
+                                Method setCameraMethod = DelegatingCaptureSession.class.getDeclaredMethod("onCameraChanged", Camera.class);
+                                setCameraMethod.setAccessible(true);
+                                /*
+                                if (sessionCamera == null) RobotLog.e("sessionCamera == null");
+                                else if (camera == null) RobotLog.e("camera == null");
+                                else RobotLog.i("no nulls");
+                                */
+                                setCameraMethod.invoke(session, camera.dup());
+                                RobotLog.i("set delegated camera of " + session + " to " + camera);
+                            } else {
+                                RobotLog.i("base camera is not webcam...");
                             }
-                            #endif //USE_REFLECTION
-
-                            session.startCapture(request, Continuation.createTrivial(frameCallback), Continuation.createTrivial(new CameraCaptureSession.StatusCallback(){
-                                @Override
-                                public void onCaptureSequenceCompleted(@NonNull CameraCaptureSession session, CameraCaptureSequenceId cameraCaptureSequenceId, long lastFrameNumber) {
-
-                                }
-                            }));
-                            RobotLog.i("...onConfigured()");
-                        } catch (CameraException e) {
-                            throw new RuntimeException(e);
+                        } catch (IllegalAccessException e) {
+                            RobotLog.w("illegal access!\n" + e);
+                        } catch (NoSuchMethodException e) {
+                            RobotLog.w("changeDelegatedCamera does not exist!\n" + e);
+                        } catch (InvocationTargetException e) {
+                            RobotLog.w("invocation target something-or-othered!\n" + e);
                         }
                     }
+                    #endif //USE_REFLECTION
 
-                    @Override
-                    public void onClosed(@NonNull CameraCaptureSession session) {
+                    CameraCaptureRequest request = camera.createCaptureRequest(ImageFormat.YUY2, new Size(xSize, ySize), 8);
 
-                    }
+                    session.startCapture(request, frameCallback, Continuation.createTrivial(new CameraCaptureSession.StatusCallback(){
+                        @Override public void onCaptureSequenceCompleted(@NonNull CameraCaptureSession session, CameraCaptureSequenceId cameraCaptureSequenceId, long lastFrameNumber) {}
+                    }));
+                } catch (CameraException e) {
+                    throw new RuntimeException(e);
                 }
-        ));
+            }
+
+            @Override public void onClosed(@NonNull CameraCaptureSession session) {}
+        }));
         return camera;
     }
 
