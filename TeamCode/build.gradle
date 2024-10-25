@@ -23,9 +23,23 @@ android {
     packagingOptions {
         jniLibs.useLegacyPackaging true
     }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 }
 
 dependencies {
     implementation project(':FtcRobotController')
     implementation project(path: ':AprilTags')
+
+    compileOnly 'systems.manifold:manifold-preprocessor:2024.1.37'
+    //annotationProcessor 'systems.manifold:manifold-preprocessor'
+    //testAnnotationProcessor 'systems.manifold:manifold-preprocessor'
+}
+
+tasks.withType(JavaCompile) {
+    // If you DO NOT define a module-info.java file:
+    options.compilerArgs += ['-Xplugin:Manifold']
 }

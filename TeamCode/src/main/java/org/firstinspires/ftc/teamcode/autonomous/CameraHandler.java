@@ -15,11 +15,16 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraCaptureSeq
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraCaptureSession;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraException;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.internal.camera.delegating.DelegatingCamera;
+import org.firstinspires.ftc.robotcore.internal.camera.delegating.DelegatingCaptureSession;
 import org.firstinspires.ftc.robotcore.internal.system.Deadline;
 import org.opencv.core.Mat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
@@ -65,6 +70,8 @@ public class CameraHandler {
     public static Camera createCamera(HardwareMap map, int xSize, int ySize, CameraCaptureSession.CaptureCallback frameCallback) throws CameraException {
         WebcamName name = map.get(WebcamName.class, "webcam");
         Camera camera = ClassFactory.getInstance().getCameraManager().requestPermissionAndOpenCamera(new Deadline(5000, TimeUnit.MILLISECONDS), name, null);
+        if (camera instanceof DelegatingCamera) RobotLog.i("Camera is delegating! Crap!");
+        else RobotLog.i("Camera is not delegating! Maybe we can use that as an exploit...");
         CameraCaptureRequest request = camera.createCaptureRequest(20, new Size(xSize, ySize), 30);
         RobotLog.i("About to create camera capture session");
         CameraCaptureSession session = camera.createCaptureSession(Continuation.createTrivial(
@@ -73,14 +80,40 @@ public class CameraHandler {
                     public void onConfigured(@NonNull CameraCaptureSession session) {
                         try {
                             RobotLog.i("onConfigured()...");
+                            RobotLog.i("Camera = " + session.getCamera().getCameraName());
                             int[] androidFormats = session.getCamera().getCameraName().getCameraCharacteristics().getAndroidFormats();
                             for (int androidFormat : androidFormats) RobotLog.i(String.format(Locale.UK, "%d", androidFormat));
+                            #if USE_REFLECTION
+                            //here comes the unsafe stuff!
+                            if (session instanceof DelegatingCaptureSession) {
+                                try {
+                                    RobotLog.i("Here goes nothing!");
+                                    Field cameraField = DelegatingCaptureSession.class.getDeclaredField("camera");
+                                    cameraField.setAccessible(true);
+                                    Camera sessionCamera = (Camera)cameraField.get((DelegatingCaptureSession)session);
+                                    RobotLog.i("camera is: " + sessionCamera);
+                                    /*Method setCameraMethod = DelegatingCamera.class.getDeclaredMethod("changeDelegatedCamera", Camera.class);
+                                    setCameraMethod.setAccessible(true);
+                                    setCameraMethod.invoke(sessionCamera, camera);*/
+                                } catch (NoSuchFieldException e) {
+                                    RobotLog.w("session is an instance of DelegatingCaptureSession, but does not contain field camera!\n" + e);
+                                } catch (IllegalAccessException e) {
+                                    RobotLog.w("illegal access!\n" + e);
+                                } /*catch (NoSuchMethodException e) {
+                                    RobotLog.w("changeDelegatedCamera does not exist!\n" + e);
+                                } catch (InvocationTargetException e) {
+                                    RobotLog.w("invocation target something-or-othered!\n" + e);
+                                }*/
+                            }
+                            #endif //USE_REFLECTION
+                            //unsafe stuff over!
                             session.startCapture(request, Continuation.createTrivial(frameCallback), Continuation.createTrivial(new CameraCaptureSession.StatusCallback(){
                                 @Override
                                 public void onCaptureSequenceCompleted(@NonNull CameraCaptureSession session, CameraCaptureSequenceId cameraCaptureSequenceId, long lastFrameNumber) {
 
                                 }
                             }));
+                            RobotLog.i("...onConfigured()");
                         } catch (CameraException e) {
                             throw new RuntimeException(e);
                         }
