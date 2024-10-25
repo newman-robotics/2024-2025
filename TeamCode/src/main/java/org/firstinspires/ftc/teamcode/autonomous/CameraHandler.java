@@ -92,21 +92,21 @@ public class CameraHandler {
                                     cameraField.setAccessible(true);
                                     Camera sessionCamera = (Camera)cameraField.get((DelegatingCaptureSession)session);
                                     RobotLog.i("camera is: " + sessionCamera);
-                                    /*Method setCameraMethod = DelegatingCamera.class.getDeclaredMethod("changeDelegatedCamera", Camera.class);
+                                    Method setCameraMethod = DelegatingCamera.class.getDeclaredMethod("changeDelegatedCamera", Camera.class);
                                     setCameraMethod.setAccessible(true);
-                                    setCameraMethod.invoke(sessionCamera, camera);*/
+                                    setCameraMethod.invoke(sessionCamera, camera);
+                                    RobotLog.i("set delegated camera of " + sessionCamera + " to " + camera);
                                 } catch (NoSuchFieldException e) {
                                     RobotLog.w("session is an instance of DelegatingCaptureSession, but does not contain field camera!\n" + e);
                                 } catch (IllegalAccessException e) {
                                     RobotLog.w("illegal access!\n" + e);
-                                } /*catch (NoSuchMethodException e) {
+                                } catch (NoSuchMethodException e) {
                                     RobotLog.w("changeDelegatedCamera does not exist!\n" + e);
                                 } catch (InvocationTargetException e) {
                                     RobotLog.w("invocation target something-or-othered!\n" + e);
-                                }*/
+                                }
                             }
                             #endif //USE_REFLECTION
-                            //unsafe stuff over!
                             session.startCapture(request, Continuation.createTrivial(frameCallback), Continuation.createTrivial(new CameraCaptureSession.StatusCallback(){
                                 @Override
                                 public void onCaptureSequenceCompleted(@NonNull CameraCaptureSession session, CameraCaptureSequenceId cameraCaptureSequenceId, long lastFrameNumber) {
