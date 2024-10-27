@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.hardware.Servo;
 
 
 /*
@@ -20,16 +21,18 @@ public class NotCopiedDrive extends LinearOpMode {
     //creates runtime for when the robot is running
     private final ElapsedTime runtime = new ElapsedTime();
 
-
     //NO PASTING
     @Override
     public void runOpMode() throws InterruptedException {
+
+        Servo servo = hardwareMap.get(Servo.class, "rclaw");
 
         //creating variables and assigning them to the motors
         DcMotor leftFrontDrive = hardwareMap.get(DcMotor.class, "drivefl");
         DcMotor leftBackDrive = hardwareMap.get(DcMotor.class, "drivebl");
         DcMotor rightFrontDrive = hardwareMap.get(DcMotor.class, "drivefr");
         DcMotor rightBackDrive = hardwareMap.get(DcMotor.class, "drivebr");
+
 
         //omni wheels can be weird so some of the motors have to go in reverse
         leftFrontDrive.setDirection(DcMotor.Direction.REVERSE);
@@ -52,6 +55,7 @@ public class NotCopiedDrive extends LinearOpMode {
             double lateral = gamepad1.left_stick_y; //we swaped the x and y
             double yaw = gamepad1.right_stick_x;
             boolean slow = gamepad1.a;
+            double s_power = gamepad1.right_trigger;
 
             //this assigns a variable to each combination of movement for the robot
             double leftFrontPower = axial + lateral + yaw;
@@ -63,12 +67,14 @@ public class NotCopiedDrive extends LinearOpMode {
             max = Math.max(Math.abs(leftFrontPower), Math.abs(rightFrontPower));
             max = Math.max(max, Math.abs(leftBackPower));
             max = Math.max(max, Math.abs(rightBackPower));
+            max = Math.max(max, Math.abs(s_power));
 
             if (max > 1.0) {
                 leftFrontPower = leftFrontPower / max;
                 rightFrontPower /= max;
                 leftBackPower /= max;
                 rightBackPower /= max;
+                s_power /= max;
             }
 
             //Early we assigned gamepad1.a to slow, so now if you click it,
@@ -78,6 +84,7 @@ public class NotCopiedDrive extends LinearOpMode {
                 rightFrontDrive.setPower(rightFrontPower / 4);
                 leftBackDrive.setPower(leftBackPower / 4);
                 rightBackDrive.setPower(-rightBackPower / 4);
+                servo.setPosition(s_power / 4);
             }
 
             else {
@@ -85,7 +92,9 @@ public class NotCopiedDrive extends LinearOpMode {
                 rightFrontDrive.setPower(rightFrontPower);
                 leftBackDrive.setPower(leftBackPower);
                 // TODO: (picawawa4000) I won't change anything, but this is poor form. You should reverse the direction of the motor instead.
+                // TONOTDO: (Epp0k) Assuming you are talking about the rightbackpower being negative, there are two instances of it that aren't negative, so I'd be messing those up.
                 rightBackDrive.setPower(-rightBackPower);
+                servo.setPosition(s_power);
             }
 
             //telemetry is the data shown on teh drive hub

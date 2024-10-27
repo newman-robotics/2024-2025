@@ -29,10 +29,10 @@ public class Autonomous_parts {
      }
 
      public void init(){
-         leftFrontDrive  = myOpMode.hardwareMap.get(DcMotor.class, "left_front_drive");
-         leftBackDrive  = myOpMode.hardwareMap.get(DcMotor.class, "left_back_drive");
-         rightFrontDrive = myOpMode.hardwareMap.get(DcMotor.class, "right_front_drive");
-         rightBackDrive = myOpMode.hardwareMap.get(DcMotor.class, "right_back_drive");
+         leftFrontDrive  = myOpMode.hardwareMap.get(DcMotor.class, "drivefl");
+         leftBackDrive  = myOpMode.hardwareMap.get(DcMotor.class, "drivebl");
+         rightFrontDrive = myOpMode.hardwareMap.get(DcMotor.class, "drivefr");
+         rightBackDrive = myOpMode.hardwareMap.get(DcMotor.class, "drivebr");
 
          leftFrontDrive.setDirection(DcMotor.Direction.REVERSE);
          leftBackDrive.setDirection(DcMotor.Direction.REVERSE);
@@ -42,7 +42,7 @@ public class Autonomous_parts {
          myOpMode.telemetry.addData(">", "Hardware Initialized: Bot Ready!");
          myOpMode.telemetry.update();
      }
-
+//axial is trun, lateral is forward and back, yaw is side to side.
      public void driveRobot(double axial, double lateral, double yaw) {
          double leftFrontPower  = axial + lateral + yaw;
          double rightFrontPower = axial - lateral - yaw;
