@@ -20,36 +20,16 @@ public class SimpleAutonomous extends LinearOpMode {
         ROTRIGHT
     }
 
-    public static class OpModeInterruptedException extends Exception {
-        public OpModeInterruptedException() {
-            super("OpMode interrupted during sleep!");
-        }
-
-        public OpModeInterruptedException(String msg) {
-            super("OpMode interrupted during sleep!\n" + msg);
-        }
-    }
-
     DcMotor frontLeft, frontRight, backLeft, backRight;
-
-    /**
-     * Tries to wait for the specified time.
-     * @param millis The time to wait for, in milliseconds.
-     * @throws OpModeInterruptedException Throws if the OpMode is interrupted or deactivates.
-     * **/
-    public void tryWait(long millis) throws OpModeInterruptedException {
-        long targetTime = System.currentTimeMillis() + millis;
-        while (System.currentTimeMillis() != targetTime) if (!this.opModeIsActive()) throw new OpModeInterruptedException();
-    }
 
     /**
      * Moves the robot for the specified time.
      * @param direction The direction to move the robot in.
      * @param millis The time to move the robot for, in milliseconds.
      * @param speed The speed at which to move the robot.
-     * @throws OpModeInterruptedException Throws if the OpMode is interrupted or deactivates.
+     * @throws AutoUtil.OpModeInterruptedException Throws if the OpMode is interrupted or deactivates.
      * **/
-    public void move(Direction direction, long millis, float speed) throws OpModeInterruptedException {
+    public void move(Direction direction, long millis, float speed) throws AutoUtil.OpModeInterruptedException {
         switch (direction) {
             case FORWARD:
                 this.frontLeft.setPower(speed);
@@ -90,20 +70,22 @@ public class SimpleAutonomous extends LinearOpMode {
             default:
                 throw new RuntimeException("SimpleAutonomous::move: bad direction!");
         }
-        this.tryWait(millis);
+        AutoUtil.safeWait(millis);
     }
 
     public void run(float speed) {
         try {
             this.move(Direction.FORWARD, 1500, speed);
             this.move(Direction.LEFT, 1000, speed);
-        } catch (OpModeInterruptedException e) {
+        } catch (AutoUtil.OpModeInterruptedException e) {
             RobotLog.e(e.getMessage());
         }
     }
 
     @Override
     public void runOpMode() throws InterruptedException {
+        AutoUtil.setOpMode(this);
+
         this.frontLeft = this.hardwareMap.get(DcMotor.class, "drivefl");
         this.frontRight = this.hardwareMap.get(DcMotor.class, "drivefr");
         this.backLeft = this.hardwareMap.get(DcMotor.class, "drivebl");

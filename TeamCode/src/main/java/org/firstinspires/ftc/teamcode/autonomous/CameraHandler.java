@@ -17,20 +17,9 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraCaptureSeq
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraCaptureSession;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraException;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.robotcore.internal.camera.delegating.DelegatingCamera;
-import org.firstinspires.ftc.robotcore.internal.camera.delegating.DelegatingCaptureSession;
 import org.firstinspires.ftc.robotcore.internal.system.Deadline;
-import org.opencv.calib3d.Calib3d;
-import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfDouble;
-import org.opencv.core.MatOfPoint2f;
-import org.opencv.core.MatOfPoint3f;
-import org.opencv.core.Point3;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
@@ -74,11 +63,12 @@ public class CameraHandler {
      * @return The created camera, or null if an error occurred. Possibly not necessary, but good to have nonetheless.
      * **/
     @Nullable
-    public static Camera createCamera(HardwareMap map, int xSize, int ySize, CameraCaptureSession.CaptureCallback frameCallback) throws CameraException {
+    public static Camera createCamera(@NonNull HardwareMap map, int xSize, int ySize, @NonNull CameraCaptureSession.CaptureCallback frameCallback) throws CameraException, AutoUtil.OpModeInterruptedException {
         WebcamName name = map.get(WebcamName.class, "webcam");
         Camera camera = ClassFactory.getInstance().getCameraManager().requestPermissionAndOpenCamera(new Deadline(5000, TimeUnit.MILLISECONDS), name, null);
         if (camera != null) {
             RobotLog.i("About to create camera capture session with camera = " + camera);
+            AutoUtil.Counter cameraOpened = new AutoUtil.Counter(1);
             CameraCaptureSession session = camera.createCaptureSession(Continuation.createTrivial(new CameraCaptureSession.StateCallback() {
                 @Override
                 public void onConfigured(@NonNull CameraCaptureSession session) {
@@ -86,13 +76,17 @@ public class CameraHandler {
                         int fps = session.getCamera().getCameraName().getCameraCharacteristics().getMaxFramesPerSecond(ImageFormat.YUY2, new Size(xSize, ySize));
                         CameraCaptureRequest request = camera.createCaptureRequest(ImageFormat.YUY2, new Size(xSize, ySize), fps);
 
+                        RobotLog.i("About to call session.startCapture(): session = " + session + ", request = " + request);
+
                         session.startCapture(request, frameCallback, Continuation.createTrivial(new CameraCaptureSession.StatusCallback() {
                             @Override
                             public void onCaptureSequenceCompleted(@NonNull CameraCaptureSession session, CameraCaptureSequenceId cameraCaptureSequenceId, long lastFrameNumber) {
                                 RobotLog.i("Camera capture sequence completed with " + lastFrameNumber + " frames");
                             }
                         }));
+                        cameraOpened.decrement();
                     } catch (CameraException e) {
+                        session.close();
                         RobotLog.e("Exception occurred while configuring camera: " + e);
                         throw new RuntimeException(e);
                     }
@@ -103,9 +97,12 @@ public class CameraHandler {
                     RobotLog.i("Capture session closed!");
                 }
             }));
-        } else {
-            RobotLog.e("Failed to open the camera!");
-        }
+            boolean timedOut = AutoUtil.waitOnCounter(cameraOpened, 5000);
+            if (timedOut) {
+                RobotLog.e("Timed out while opening the camera!");
+                session.close();
+            }
+        } else RobotLog.e("Failed to open the camera!");
         return camera;
     }
 

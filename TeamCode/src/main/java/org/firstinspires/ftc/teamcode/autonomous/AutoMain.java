@@ -17,13 +17,16 @@ public class AutoMain extends LinearOpMode {
      * **/
     @Override
     public void runOpMode() throws InterruptedException {
+        AutoUtil.setOpMode(this);
+
         try {
             CameraFrameCallback callback = new CameraFrameCallback(CameraHandler::getLocationOnBoard, X_SIZE, Y_SIZE);
             Camera camera = CameraHandler.createCamera(this.hardwareMap, X_SIZE, Y_SIZE, callback);
             CameraStreamServer.getInstance().setSource(callback.getCameraStreamSource());
-        } catch (CameraException e) {
+        } catch (CameraException | AutoUtil.OpModeInterruptedException e) {
             throw new RuntimeException(e);
         }
+
         this.waitForStart();
     }
 }
