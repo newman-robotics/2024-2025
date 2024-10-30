@@ -101,6 +101,8 @@ public class CameraHandler {
             if (timedOut) {
                 RobotLog.e("Timed out while opening the camera!");
                 session.close();
+                camera.close();
+                return null;
             }
         } else RobotLog.e("Failed to open the camera!");
         return camera;
