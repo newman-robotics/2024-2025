@@ -1,8 +1,5 @@
 package org.firstinspires.ftc.teamcode.autonomous;
 
-//Enables a hacky "fix" for the null camera problem.
-//#define USE_REFLECTION
-
 import android.graphics.ImageFormat;
 
 import androidx.annotation.NonNull;
@@ -74,56 +71,41 @@ public class CameraHandler {
      * @param xSize The width of the capture.
      * @param ySize The height of the capture.
      * @param frameCallback A function wrapper to process frames.
-     * @return The created camera. Possibly not necessary, but good to have nonetheless.
+     * @return The created camera, or null if an error occurred. Possibly not necessary, but good to have nonetheless.
      * **/
+    @Nullable
     public static Camera createCamera(HardwareMap map, int xSize, int ySize, CameraCaptureSession.CaptureCallback frameCallback) throws CameraException {
         WebcamName name = map.get(WebcamName.class, "webcam");
         Camera camera = ClassFactory.getInstance().getCameraManager().requestPermissionAndOpenCamera(new Deadline(5000, TimeUnit.MILLISECONDS), name, null);
-        RobotLog.i("About to create camera capture session with camera = " + camera);
-        CameraCaptureSession session = camera.createCaptureSession(Continuation.createTrivial(new CameraCaptureSession.StateCallback(){
-            @Override
-            public void onConfigured(@NonNull CameraCaptureSession session) {
-                try {
-                    #if USE_REFLECTION
-                    if (session instanceof DelegatingCaptureSession) {
-                        try {
-                            RobotLog.i("Here goes nothing!");
-                            if (!(camera instanceof DelegatingCamera)) {
-                                RobotLog.i("base camera name is webcam, attempting to force it into delegating camera...");
-                                Method setCameraMethod = DelegatingCaptureSession.class.getDeclaredMethod("onCameraChanged", Camera.class);
-                                setCameraMethod.setAccessible(true);
-                                /*
-                                if (sessionCamera == null) RobotLog.e("sessionCamera == null");
-                                else if (camera == null) RobotLog.e("camera == null");
-                                else RobotLog.i("no nulls");
-                                */
-                                setCameraMethod.invoke(session, camera.dup());
-                                RobotLog.i("set delegated camera of " + session + " to " + camera);
-                            } else {
-                                RobotLog.i("base camera is not webcam...");
+        if (camera != null) {
+            RobotLog.i("About to create camera capture session with camera = " + camera);
+            CameraCaptureSession session = camera.createCaptureSession(Continuation.createTrivial(new CameraCaptureSession.StateCallback() {
+                @Override
+                public void onConfigured(@NonNull CameraCaptureSession session) {
+                    try {
+                        int fps = session.getCamera().getCameraName().getCameraCharacteristics().getMaxFramesPerSecond(ImageFormat.YUY2, new Size(xSize, ySize));
+                        CameraCaptureRequest request = camera.createCaptureRequest(ImageFormat.YUY2, new Size(xSize, ySize), fps);
+
+                        session.startCapture(request, frameCallback, Continuation.createTrivial(new CameraCaptureSession.StatusCallback() {
+                            @Override
+                            public void onCaptureSequenceCompleted(@NonNull CameraCaptureSession session, CameraCaptureSequenceId cameraCaptureSequenceId, long lastFrameNumber) {
+                                RobotLog.i("Camera capture sequence completed with " + lastFrameNumber + " frames");
                             }
-                        } catch (IllegalAccessException e) {
-                            RobotLog.w("illegal access!\n" + e);
-                        } catch (NoSuchMethodException e) {
-                            RobotLog.w("changeDelegatedCamera does not exist!\n" + e);
-                        } catch (InvocationTargetException e) {
-                            RobotLog.w("invocation target something-or-othered!\n" + e);
-                        }
+                        }));
+                    } catch (CameraException e) {
+                        RobotLog.e("Exception occurred while configuring camera: " + e);
+                        throw new RuntimeException(e);
                     }
-                    #endif //USE_REFLECTION
-
-                    CameraCaptureRequest request = camera.createCaptureRequest(ImageFormat.YUY2, new Size(xSize, ySize), 8);
-
-                    session.startCapture(request, frameCallback, Continuation.createTrivial(new CameraCaptureSession.StatusCallback(){
-                        @Override public void onCaptureSequenceCompleted(@NonNull CameraCaptureSession session, CameraCaptureSequenceId cameraCaptureSequenceId, long lastFrameNumber) {}
-                    }));
-                } catch (CameraException e) {
-                    throw new RuntimeException(e);
                 }
-            }
 
-            @Override public void onClosed(@NonNull CameraCaptureSession session) {}
-        }));
+                @Override
+                public void onClosed(@NonNull CameraCaptureSession session) {
+                    RobotLog.i("Capture session closed!");
+                }
+            }));
+        } else {
+            RobotLog.e("Failed to open the camera!");
+        }
         return camera;
     }
 
