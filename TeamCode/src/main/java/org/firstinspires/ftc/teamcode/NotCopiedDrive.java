@@ -1,5 +1,7 @@
-//importing important things
 package org.firstinspires.ftc.teamcode;
+
+//Whether to use the arm
+#define USE_ARM
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -89,6 +91,7 @@ public class NotCopiedDrive extends LinearOpMode {
         }
     }
 
+    #if USE_ARM
     /**
      * Represents powers of the arm.
      * **/
@@ -148,14 +151,17 @@ public class NotCopiedDrive extends LinearOpMode {
             else if (this.elevation < 0.0f) NotCopiedDrive.this.armDown.setPower(-this.elevation);
         }
     }
+    #endif
 
     public DcMotor frontLeft;
     public DcMotor frontRight;
     public DcMotor backLeft;
     public DcMotor backRight;
+    #if USE_ARM
     public CRServo armUp;
     public CRServo armDown;
     public Servo armAngle;
+    #endif
 
     /**
      * Initialises the robot's hardware. Dead simple.
@@ -173,9 +179,11 @@ public class NotCopiedDrive extends LinearOpMode {
         this.backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         this.backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+        #if USE_ARM
         this.armUp = this.hardwareMap.get(CRServo.class, "armup");
         this.armDown = this.hardwareMap.get(CRServo.class, "armdown");
         this.armAngle = this.hardwareMap.get(Servo.class, "armangle");
+        #endif
     }
 
     /**
@@ -199,6 +207,7 @@ public class NotCopiedDrive extends LinearOpMode {
         return ret;
     }
 
+    #if USE_ARM
     /**
      * Returns the arm powers calculated from the gamepad.
      * @return The arm powers, which can be directly applied to the motors with one function call.
@@ -228,6 +237,7 @@ public class NotCopiedDrive extends LinearOpMode {
         ret.clamp();
         return ret;
     }
+    #endif
 
     //NO PASTING
     @Override
@@ -239,12 +249,16 @@ public class NotCopiedDrive extends LinearOpMode {
             MotorPowers drivePowers = this.getMotorPowers();
             drivePowers.apply();
 
+            #if USE_ARM
             ArmPowers armPowers = this.getArmPowers();
             armPowers.apply();
+            #endif
         }
 
         //Brakes the robot.
         new MotorPowers().apply();
+        #if USE_ARM
         new ArmPowers().apply();
+        #endif
     }
 }
