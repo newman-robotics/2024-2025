@@ -89,6 +89,66 @@ public class NotCopiedDrive extends LinearOpMode {
         }
     }
 
+    /**
+     * Represents powers of the arm.
+     * **/
+    public class ArmPowers {
+        private double elevation;
+        private double angle;
+
+        /**
+         * Default constructor: zero-initialises everything.
+         * **/
+        public ArmPowers() {
+            this(0.0f);
+        }
+
+        /**
+         * Sets the elevation to the given value without the arm angle changing.
+         * @param elevation The power with which to move the arm. Positive means up, negative means down.
+         * **/
+        public ArmPowers(double elevation) {
+            this(elevation, NotCopiedDrive.this.armAngle.getPosition());
+        }
+
+        /**
+         * Creates a new ArmPowers from the given powers.
+         * @param elevation The power with which to move the arm. Positive means up, negative means down.
+         * @param angle The angle to move the arm to. Must be in the range [0.0, 1.0].
+         * **/
+        public ArmPowers(double elevation, double angle) {
+            this.elevation = elevation;
+            this.angle = angle;
+        }
+
+        public double getElevation() {return this.elevation;}
+        public double getAngle() {return this.angle;}
+
+        public void setElevation(double value) {this.elevation = value;}
+        public void setAngle(double value) {this.angle = value;}
+
+        /**
+         * Clamps both the elevation and angle to their respective ranges.
+         * **/
+        public void clamp() {
+            if (this.elevation > 1.0f) this.elevation = 1.0f;
+            if (this.angle > 1.0f) this.angle = 1.0f;
+
+            if (this.elevation < -1.0f) this.elevation = -1.0f;
+            if (this.angle < 0.0f) this.angle = 0.0f;
+        }
+
+        /**
+         * Applies these powers to the robot's motors.
+         * **/
+        public void apply() {
+            NotCopiedDrive.this.armAngle.setPosition(this.angle);
+            //Zero doesn't do anything, so neither branch triggers on zero.
+            if (this.elevation > 0.0f) NotCopiedDrive.this.armUp.setPower(this.elevation);
+            else if (this.elevation < 0.0f) NotCopiedDrive.this.armDown.setPower(-this.elevation);
+        }
+    }
+
     public DcMotor frontLeft;
     public DcMotor frontRight;
     public DcMotor backLeft;
@@ -134,10 +194,38 @@ public class NotCopiedDrive extends LinearOpMode {
                 axial - lateral + yaw,
                 axial + lateral - yaw
         );
-
         if (slow) ret.scale(0.25f);
         ret.clamp();
+        return ret;
+    }
 
+    /**
+     * Returns the arm powers calculated from the gamepad.
+     * @return The arm powers, which can be directly applied to the motors with one function call.
+     * **/
+    public ArmPowers getArmPowers() {
+        boolean up = this.gamepad1.dpad_up;
+        boolean down = this.gamepad1.dpad_down;
+        boolean left = this.gamepad1.dpad_left;
+        boolean right = this.gamepad1.dpad_right;
+
+        double elevation;
+        //Either neither is being pressed or both are being pressed. Either way, we don't want anything to happen.
+        if (up == down) elevation = 0.0f;
+        //Only up is being pressed: move it up.
+        else if (up) elevation = 1.0f;
+        //Only down is being pressed: move it down.
+        else elevation = -1.0f;
+
+        double angle = this.armAngle.getPosition();
+        //See above for why this is required.
+        if (left != right) {
+            if (left) angle += 0.01f;
+            else angle -= 0.01f;
+        }
+
+        ArmPowers ret = new ArmPowers(elevation, angle);
+        ret.clamp();
         return ret;
     }
 
@@ -148,11 +236,15 @@ public class NotCopiedDrive extends LinearOpMode {
         this.waitForStart();
 
         while (this.opModeIsActive()) {
-            MotorPowers powers = this.getMotorPowers();
-            powers.apply();
+            MotorPowers drivePowers = this.getMotorPowers();
+            drivePowers.apply();
+
+            ArmPowers armPowers = this.getArmPowers();
+            armPowers.apply();
         }
 
         //Brakes the robot.
         new MotorPowers().apply();
+        new ArmPowers().apply();
     }
 }
