@@ -123,10 +123,10 @@ public class NotCopiedDrive extends LinearOpMode {
      * @return The motor powers, which can be directly applied to the motors with one function call.
      * **/
     public MotorPowers getMotorPowers() {
-        double axial = -gamepad1.left_stick_x;
-        double lateral = gamepad1.left_stick_y;
-        double yaw = gamepad1.right_stick_x;
-        boolean slow = gamepad1.a;
+        double axial = -this.gamepad1.left_stick_x;
+        double lateral = this.gamepad1.left_stick_y;
+        double yaw = this.gamepad1.right_stick_x;
+        boolean slow = this.gamepad1.a;
 
         MotorPowers ret = new MotorPowers(
                 axial + lateral + yaw,
