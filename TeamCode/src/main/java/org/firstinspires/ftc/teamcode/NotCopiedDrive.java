@@ -1,114 +1,158 @@
 //importing important things
 package org.firstinspires.ftc.teamcode;
+
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
-
-
-/*
-drivebr = 0
-drivefr = 0
-drivefl = 0
-drivebl = 0
-*/
 
 //Whatever the name is will appear in the driver hub select display
 @TeleOp(name="New_Code_Juju")
 public class NotCopiedDrive extends LinearOpMode {
+    /**
+     * Represents the powers of the motors.
+     * **/
+    public class MotorPowers {
+        private double frontLeft;
+        private double frontRight;
+        private double backLeft;
+        private double backRight;
 
-    //creates runtime for when the robot is running
-    private final ElapsedTime runtime = new ElapsedTime();
+        /**
+         * Default constructor: zero-initialises everything.
+         * **/
+        public MotorPowers() {
+            this(0.f, 0.f, 0.f, 0.f);
+        }
+
+        /**
+         * Creates a new MotorPowers from the given powers.
+         * @param frontLeft The power of the front left motor.
+         * @param frontRight The power of the front right motor.
+         * @param backLeft The power of the back left motor.
+         * @param backRight The power of the back right motor.
+         * **/
+        public MotorPowers(double frontLeft, double frontRight, double backLeft, double backRight) {
+            this.frontLeft = frontLeft;
+            this.frontRight = frontRight;
+            this.backLeft = backLeft;
+            this.backRight = backRight;
+        }
+
+        public double getFrontLeft() {return this.frontLeft;}
+        public double getFrontRight() {return this.frontRight;}
+        public double getBackLeft() {return this.backLeft;}
+        public double getBackRight() {return this.backRight;}
+
+        public void setFrontLeft(double value) {this.frontLeft = value;}
+        public void setFrontRight(double value) {this.frontRight = value;}
+        public void setBackLeft(double value) {this.backLeft = value;}
+        public void setBackRight(double value) {this.backRight = value;}
+
+        /**
+         * Multiplies every power by the given factor.
+         * @param factor The multiplier to be applied to every power.
+         * **/
+        public void scale(double factor) {
+            this.frontLeft *= factor;
+            this.frontRight *= factor;
+            this.backLeft *= factor;
+            this.backRight *= factor;
+        }
+
+        /**
+         * Clamps every value to the range [-1.0, 1.0].
+         * Not actually sure if this is necessary at all, or if the motors do this automatically.
+         * **/
+        public void clamp() {
+            if (this.frontLeft > 1.0f) this.frontLeft = 1.0f;
+            if (this.frontRight > 1.0f) this.frontRight = 1.0f;
+            if (this.backLeft > 1.0f) this.backLeft = 1.0f;
+            if (this.backRight > 1.0f) this.backRight = 1.0f;
+
+            if (this.frontLeft < -1.0f) this.frontLeft = -1.0f;
+            if (this.frontRight < -1.0f) this.frontRight = -1.0f;
+            if (this.backLeft < -1.0f) this.backLeft = -1.0f;
+            if (this.backRight < -1.0f) this.backRight = -1.0f;
+        }
+
+        /**
+         * Applies these powers to the robot's motors.
+         * **/
+        public void apply() {
+            NotCopiedDrive.this.frontLeft.setPower(this.frontLeft);
+            NotCopiedDrive.this.frontRight.setPower(this.frontRight);
+            NotCopiedDrive.this.backLeft.setPower(this.backLeft);
+            NotCopiedDrive.this.backRight.setPower(this.backRight);
+        }
+    }
+
+    public DcMotor frontLeft;
+    public DcMotor frontRight;
+    public DcMotor backLeft;
+    public DcMotor backRight;
+    public CRServo armUp;
+    public CRServo armDown;
+    public Servo armAngle;
+
+    /**
+     * Initialises the robot's hardware. Dead simple.
+     * **/
+    public void initHardware() {
+        this.frontLeft = this.hardwareMap.get(DcMotor.class, "drivefl");
+        this.backLeft = this.hardwareMap.get(DcMotor.class, "drivebl");
+        this.frontRight = this.hardwareMap.get(DcMotor.class, "drivefr");
+        this.backRight = this.hardwareMap.get(DcMotor.class, "drivebr");
+
+        this.backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        this.frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        this.frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        this.backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        this.backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        this.armUp = this.hardwareMap.get(CRServo.class, "armup");
+        this.armDown = this.hardwareMap.get(CRServo.class, "armdown");
+        this.armAngle = this.hardwareMap.get(Servo.class, "armangle");
+    }
+
+    /**
+     * Returns the motor powers calculated from the gamepad.
+     * @return The motor powers, which can be directly applied to the motors with one function call.
+     * **/
+    public MotorPowers getMotorPowers() {
+        double axial = -gamepad1.left_stick_x;
+        double lateral = gamepad1.left_stick_y;
+        double yaw = gamepad1.right_stick_x;
+        boolean slow = gamepad1.a;
+
+        MotorPowers ret = new MotorPowers(
+                axial + lateral + yaw,
+                axial - lateral - yaw,
+                axial - lateral + yaw,
+                axial + lateral - yaw
+        );
+
+        if (slow) ret.scale(0.25f);
+        ret.clamp();
+
+        return ret;
+    }
 
     //NO PASTING
     @Override
     public void runOpMode() throws InterruptedException {
+        this.initHardware();
+        this.waitForStart();
 
-        Servo servo = hardwareMap.get(Servo.class, "rclaw");
-
-        //creating variables and assigning them to the motors
-        DcMotor leftFrontDrive = hardwareMap.get(DcMotor.class, "drivefl");
-        DcMotor leftBackDrive = hardwareMap.get(DcMotor.class, "drivebl");
-        DcMotor rightFrontDrive = hardwareMap.get(DcMotor.class, "drivefr");
-        DcMotor rightBackDrive = hardwareMap.get(DcMotor.class, "drivebr");
-
-
-        //omni wheels can be weird so some of the motors have to go in reverse
-        leftFrontDrive.setDirection(DcMotor.Direction.REVERSE);
-        leftBackDrive.setDirection(DcMotor.Direction.REVERSE);
-        rightFrontDrive.setDirection(DcMotor.Direction.FORWARD);
-        rightBackDrive.setDirection(DcMotor.Direction.FORWARD);
-
-        //these values are displayed on the driver hub
-        telemetry.addData("Status", "Initialized");
-        telemetry.addData(">", "Press Start to scan Servo." );
-        telemetry.update();
-        waitForStart();
-        runtime.reset();
-
-        while(opModeIsActive()) {
-
-            //creating variables that trigger when a button on the control is pressed
-            double max;
-            double axial = -gamepad1.left_stick_x;  //pushing stick forward gives negative value so we have to make it negetive
-            double lateral = gamepad1.left_stick_y; //we swaped the x and y
-            double yaw = gamepad1.right_stick_x;
-            boolean slow = gamepad1.a;
-            double s_power = gamepad1.right_trigger;
-
-            //this assigns a variable to each combination of movement for the robot
-            double leftFrontPower = axial + lateral + yaw;
-            double rightFrontPower = axial - lateral - yaw;
-            double leftBackPower = axial - lateral + yaw;
-            double rightBackPower = axial + lateral - yaw;
-
-            //creating a max amount of power to prevent the motors from reaching lightspeed
-            max = Math.max(Math.abs(leftFrontPower), Math.abs(rightFrontPower));
-            max = Math.max(max, Math.abs(leftBackPower));
-            max = Math.max(max, Math.abs(rightBackPower));
-            max = Math.max(max, Math.abs(s_power));
-
-            if (max > 1.0) {
-                leftFrontPower = leftFrontPower / max;
-                rightFrontPower /= max;
-                leftBackPower /= max;
-                rightBackPower /= max;
-                s_power /= max;
-            }
-
-            //Early we assigned gamepad1.a to slow, so now if you click it,
-            // it will slow the robot down by a fourth. If not it will drive as usual
-            if (slow) {
-                leftFrontDrive.setPower(leftFrontPower / 4);
-                rightFrontDrive.setPower(rightFrontPower / 4);
-                leftBackDrive.setPower(leftBackPower / 4);
-                rightBackDrive.setPower(-rightBackPower / 4);
-                servo.setPosition(s_power / 4);
-            }
-
-            else {
-                leftFrontDrive.setPower(leftFrontPower);
-                rightFrontDrive.setPower(rightFrontPower);
-                leftBackDrive.setPower(leftBackPower);
-                // TODO: (picawawa4000) I won't change anything, but this is poor form. You should reverse the direction of the motor instead.
-                // TONOTDO: (Epp0k) Assuming you are talking about the rightbackpower being negative, there are two instances of it that aren't negative, so I'd be messing those up.
-                rightBackDrive.setPower(-rightBackPower);
-                servo.setPosition(s_power);
-            }
-
-            //telemetry is the data shown on teh drive hub
-            //in most cases it doesn't do much but can be useful for testing code
-            telemetry.addData("Status", "Run Time: " + runtime.toString());
-            telemetry.addData("Front left/Right", "%4.2f, %4.2f", leftFrontPower, rightFrontPower);
-            telemetry.addData("Back  left/Right", "%4.2f, %4.2f", leftBackPower, rightBackPower);
-            //this one says slow if slow mode is activated
-            telemetry.addData("slow", slow);
-            telemetry.addData(">", "Press Stop to end test." );
-            idle();
-            telemetry.addData(">", "Done");
-            telemetry.update();
-
+        while (this.opModeIsActive()) {
+            MotorPowers powers = this.getMotorPowers();
+            powers.apply();
         }
+
+        //Brakes the robot.
+        new MotorPowers().apply();
     }
 }

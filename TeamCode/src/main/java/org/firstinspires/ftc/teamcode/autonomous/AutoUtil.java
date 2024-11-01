@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.util.RobotLog;
 
 public class AutoUtil {
     public static class OpModeInterruptedException extends Exception {
@@ -74,6 +75,7 @@ public class AutoUtil {
      * @throws OpModeInterruptedException Throws if the OpMode is interrupted.
      * **/
     public static boolean waitOnCounter(@NonNull Counter counter, long timeoutMillis) throws OpModeInterruptedException {
+        if (timeoutMillis == 0) RobotLog.w("Waiting on counter " + counter + " without a timeout. This might freeze.");
         long deadline = timeoutMillis == 0 ? -1 : System.currentTimeMillis() + timeoutMillis;
         while (System.currentTimeMillis() != deadline) {
             if (!AutoUtil.opMode.opModeIsActive())
