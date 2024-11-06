@@ -16,12 +16,16 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraCaptureReq
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraCaptureSequenceId;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraCaptureSession;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraException;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraManager;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.internal.camera.CameraManagerInternal;
 import org.firstinspires.ftc.robotcore.internal.system.Deadline;
 import org.opencv.core.Mat;
 
 import java.util.ArrayList;
 import java.util.Locale;
+import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 import edu.umich.eecs.april.apriltag.ApriltagDetection;
@@ -64,12 +68,34 @@ public class CameraHandler {
      * **/
     @Nullable
     public static Camera createCamera(@NonNull HardwareMap map, int xSize, int ySize, @NonNull CameraCaptureSession.CaptureCallback frameCallback) throws CameraException, AutoUtil.OpModeInterruptedException {
+        CameraManager cameraManager = ClassFactory.getInstance().getCameraManager();
+        Executor serialThreadPool = ((CameraManagerInternal)cameraManager).getSerialThreadPool();
         WebcamName name = map.get(WebcamName.class, "webcam");
-        Camera camera = ClassFactory.getInstance().getCameraManager().requestPermissionAndOpenCamera(new Deadline(5000, TimeUnit.MILLISECONDS), name, null);
+        AutoUtil.Counter cameraCreated = new AutoUtil.Counter(1);
+        AutoUtil.Value<Camera> cameraWrapper = new AutoUtil.Value<Camera>();
+        cameraManager.requestPermissionAndOpenCamera(new Deadline(5000, TimeUnit.MILLISECONDS), name, Continuation.create(serialThreadPool, new Camera.StateCallback() {
+            @Override public void onOpened(@NonNull Camera camera) {
+                RobotLog.i("Camera " + camera + " successfully opened");
+                cameraWrapper.value = camera;
+                cameraCreated.decrement();
+            }
+            @Override public void onOpenFailed(@NonNull CameraName cameraName, @NonNull Camera.OpenFailure reason) {
+                RobotLog.e("Camera with name " + cameraName + " failed to open with reason " + reason);
+                cameraCreated.decrement();
+            }
+            @Override public void onClosed(@NonNull Camera camera) {RobotLog.i("Camera " + camera + " closed");}
+            @Override public void onError(@NonNull Camera camera, Camera.Error error) {
+                RobotLog.e("Error during creation of camera " + camera + ": " + error);
+                camera.close();
+                cameraCreated.decrement();
+            }
+        }));
+        AutoUtil.waitOnCounter(cameraCreated, 5000);
+        Camera camera = cameraWrapper.value;
         if (camera != null) {
-            RobotLog.i("About to create camera capture session with camera = " + camera);
+            RobotLog.i("About to create camera capture session with camera " + camera);
             AutoUtil.Counter cameraOpened = new AutoUtil.Counter(1);
-            CameraCaptureSession session = camera.createCaptureSession(Continuation.createTrivial(new CameraCaptureSession.StateCallback() {
+            CameraCaptureSession session = camera.createCaptureSession(Continuation.create(serialThreadPool, new CameraCaptureSession.StateCallback() {
                 @Override
                 public void onConfigured(@NonNull CameraCaptureSession session) {
                     try {
@@ -78,7 +104,7 @@ public class CameraHandler {
 
                         RobotLog.i("About to call session.startCapture(): session = " + session + ", request = " + request);
 
-                        session.startCapture(request, frameCallback, Continuation.createTrivial(new CameraCaptureSession.StatusCallback() {
+                        session.startCapture(request, frameCallback, Continuation.create(serialThreadPool, new CameraCaptureSession.StatusCallback() {
                             @Override
                             public void onCaptureSequenceCompleted(@NonNull CameraCaptureSession session, CameraCaptureSequenceId cameraCaptureSequenceId, long lastFrameNumber) {
                                 RobotLog.i("Camera capture sequence completed with " + lastFrameNumber + " frames");
@@ -89,6 +115,9 @@ public class CameraHandler {
                         session.close();
                         RobotLog.e("Exception occurred while configuring camera: " + e);
                         throw new RuntimeException(e);
+                    } catch (NullPointerException e) {
+                        e.printStackTrace();
+                        throw e;
                     }
                 }
 
@@ -104,7 +133,7 @@ public class CameraHandler {
                 camera.close();
                 return null;
             }
-        } else RobotLog.e("Failed to open the camera!");
+        }
         return camera;
     }
 

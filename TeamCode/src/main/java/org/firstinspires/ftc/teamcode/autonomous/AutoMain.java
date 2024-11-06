@@ -28,16 +28,16 @@ public class AutoMain extends LinearOpMode {
         AutoUtil.setOpMode(this);
 
         try {
-            //CameraFrameCallback callback = new CameraFrameCallback(CameraHandler::getLocationOnBoard, X_SIZE, Y_SIZE);
-            CameraCaptureSession.CaptureCallback callback = new CameraCaptureSession.CaptureCallback() {
+            CameraFrameCallback callback = new CameraFrameCallback(CameraHandler::getLocationOnBoard, X_SIZE, Y_SIZE);
+            /*CameraCaptureSession.CaptureCallback callback = new CameraCaptureSession.CaptureCallback() {
                 @Override
                 public void onNewFrame(@NonNull CameraCaptureSession session, @NonNull CameraCaptureRequest request, @NonNull CameraFrame cameraFrame) {
                     RobotLog.i("received frame from camera!");
                 }
-            };
+            };*/
             camera = CameraHandler.createCamera(this.hardwareMap, X_SIZE, Y_SIZE, callback);
             if (camera == null) throw new RuntimeException("Failed to open camera (check logs for details)");
-            //CameraStreamServer.getInstance().setSource(callback.getCameraStreamSource());
+            CameraStreamServer.getInstance().setSource(callback.getCameraStreamSource());
         } catch (CameraException | AutoUtil.OpModeInterruptedException e) {
             throw new RuntimeException(e);
         }

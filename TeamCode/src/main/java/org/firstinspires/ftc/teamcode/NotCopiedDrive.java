@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode;
 
 //Whether to use the arm
 #define USE_ARM
+//Whether to use the arm servo (claw)
+//#define USE_ELBOW
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -111,7 +113,11 @@ public class NotCopiedDrive extends LinearOpMode {
          * @param elevation The power with which to move the arm. Positive means up, negative means down.
          * **/
         public ArmPowers(double elevation) {
+            #if USE_ELBOW
             this(elevation, NotCopiedDrive.this.armAngle.getPosition());
+            #else
+            this(elevation, 0.0);
+            #endif
         }
 
         /**
@@ -145,10 +151,10 @@ public class NotCopiedDrive extends LinearOpMode {
          * Applies these powers to the robot's motors.
          * **/
         public void apply() {
+            #if USE_ELBOW
             NotCopiedDrive.this.armAngle.setPosition(this.angle);
-            //Zero doesn't do anything, so neither branch triggers on zero.
-            if (this.elevation > 0.0f) NotCopiedDrive.this.armUp.setPower(this.elevation);
-            else if (this.elevation < 0.0f) NotCopiedDrive.this.armDown.setPower(-this.elevation);
+            #endif
+            NotCopiedDrive.this.armElevation.setPower(this.elevation);
         }
     }
     #endif
@@ -158,9 +164,10 @@ public class NotCopiedDrive extends LinearOpMode {
     public DcMotor backLeft;
     public DcMotor backRight;
     #if USE_ARM
-    public CRServo armUp;
-    public CRServo armDown;
+    public DcMotor armElevation;
+    #if USE_ELBOW
     public Servo armAngle;
+    #endif
     #endif
 
     /**
@@ -180,9 +187,10 @@ public class NotCopiedDrive extends LinearOpMode {
         this.backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         #if USE_ARM
-        this.armUp = this.hardwareMap.get(CRServo.class, "armup");
-        this.armDown = this.hardwareMap.get(CRServo.class, "armdown");
+        this.armElevation = this.hardwareMap.get(DcMotor.class, "armUp");
+        #if USE_ELBOW
         this.armAngle = this.hardwareMap.get(Servo.class, "armangle");
+        #endif
         #endif
     }
 
@@ -226,7 +234,11 @@ public class NotCopiedDrive extends LinearOpMode {
         //Only down is being pressed: move it down.
         else elevation = -1.0f;
 
+        #if USE_ELBOW
         double angle = this.armAngle.getPosition();
+        #else
+        double angle = 0.0;
+        #endif
         //See above for why this is required.
         if (left != right) {
             if (left) angle += 0.01f;
