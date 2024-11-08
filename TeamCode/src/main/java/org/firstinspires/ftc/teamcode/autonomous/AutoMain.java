@@ -12,11 +12,12 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraCaptureSes
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraException;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraFrame;
 import org.firstinspires.ftc.robotcore.external.stream.CameraStreamServer;
+import org.opencv.core.Mat;
 
 @Autonomous(name="AutoMain")
 public class AutoMain extends LinearOpMode {
-    public static int X_SIZE = 1280;
-    public static int Y_SIZE = 720;
+    public static int X_SIZE = 640;
+    public static int Y_SIZE = 480;
 
     /**
      * The main function.
@@ -28,7 +29,7 @@ public class AutoMain extends LinearOpMode {
         AutoUtil.setOpMode(this);
 
         try {
-            CameraFrameCallback callback = new CameraFrameCallback(CameraHandler::getLocationOnBoard, X_SIZE, Y_SIZE);
+            CameraFrameCallback callback = new CameraFrameCallback((Mat) -> {}, X_SIZE, Y_SIZE);
             /*CameraCaptureSession.CaptureCallback callback = new CameraCaptureSession.CaptureCallback() {
                 @Override
                 public void onNewFrame(@NonNull CameraCaptureSession session, @NonNull CameraCaptureRequest request, @NonNull CameraFrame cameraFrame) {

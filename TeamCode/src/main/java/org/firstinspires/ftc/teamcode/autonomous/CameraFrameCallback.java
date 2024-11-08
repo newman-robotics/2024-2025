@@ -4,7 +4,8 @@ import android.graphics.Bitmap;
 
 import androidx.annotation.NonNull;
 
-import org.firstinspires.ftc.robotcore.external.function.Continuation;
+import com.qualcomm.robotcore.util.RobotLog;
+
 import org.firstinspires.ftc.robotcore.external.function.ContinuationResult;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraCaptureRequest;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraCaptureSession;
@@ -12,7 +13,6 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraFrame;
 import org.firstinspires.ftc.robotcore.external.stream.CameraStreamSource;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.imgproc.Imgproc;
 
 import java.nio.ByteBuffer;
 import java.util.function.Consumer;
@@ -24,7 +24,7 @@ public class CameraFrameCallback implements CameraCaptureSession.CaptureCallback
     private final Consumer<Mat> callback;
     private final int xSize;
     private final int ySize;
-    private final Bitmap lastBitmap;
+    private Bitmap lastBitmap;
 
     /**
      * Creates a camera frame callback from the given consumer. For some reason, there's no way to dynamically fetch the size of a frame from the camera callback itself, so they must be provided here.
@@ -36,7 +36,6 @@ public class CameraFrameCallback implements CameraCaptureSession.CaptureCallback
         this.callback = callback;
         this.xSize = xSize;
         this.ySize = ySize;
-        this.lastBitmap = Bitmap.createBitmap(xSize, ySize, Bitmap.Config.RGB_565);
     }
 
     /**
@@ -44,9 +43,20 @@ public class CameraFrameCallback implements CameraCaptureSession.CaptureCallback
      * **/
     @Override
     public void onNewFrame(@NonNull CameraCaptureSession session, @NonNull CameraCaptureRequest request, @NonNull CameraFrame cameraFrame) {
-        cameraFrame.copyToBitmap(this.lastBitmap);
-        Mat cvFrame = new Mat(this.xSize, this.ySize, CvType.CV_8U);
-        callback.accept(cvFrame);
+        RobotLog.i("CameraFrameCallback::onNewFrame(" + cameraFrame.getFrameNumber() + ")...");
+
+        byte[] rawData = cameraFrame.getImageData();
+        if (rawData.length == 0) {
+            RobotLog.e("Failed to find camera data!");
+            this.lastBitmap = null;
+        }
+        else {
+            this.lastBitmap = request.createEmptyBitmap();
+            cameraFrame.copyToBitmap(this.lastBitmap);
+            ByteBuffer data = ByteBuffer.wrap(rawData);
+            Mat cvFrame = new Mat(this.xSize, this.ySize, CvType.CV_8U, data);
+            callback.accept(cvFrame);
+        }
     }
 
     /**
@@ -57,7 +67,8 @@ public class CameraFrameCallback implements CameraCaptureSession.CaptureCallback
         return continuation -> continuation.dispatch(new ContinuationResult<org.firstinspires.ftc.robotcore.external.function.Consumer<Bitmap>>() {
             @Override
             public void handle(org.firstinspires.ftc.robotcore.external.function.Consumer<Bitmap> bitmapConsumer) {
-                bitmapConsumer.accept(CameraFrameCallback.this.lastBitmap);
+                if (CameraFrameCallback.this.lastBitmap == null) RobotLog.e("Attempting to send null bitmap!");
+                else bitmapConsumer.accept(CameraFrameCallback.this.lastBitmap);
             }
         });
     }

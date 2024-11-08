@@ -12,6 +12,8 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.teamcode.autonomous.AutoUtil;
+
 //Whatever the name is will appear in the driver hub select display
 @TeleOp(name="New_Code_Juju")
 public class NotCopiedDrive extends LinearOpMode {
@@ -105,7 +107,7 @@ public class NotCopiedDrive extends LinearOpMode {
          * Default constructor: zero-initialises everything.
          * **/
         public ArmPowers() {
-            this(0.0f);
+            this(0.0);
         }
 
         /**
@@ -113,11 +115,7 @@ public class NotCopiedDrive extends LinearOpMode {
          * @param elevation The power with which to move the arm. Positive means up, negative means down.
          * **/
         public ArmPowers(double elevation) {
-            #if USE_ELBOW
-            this(elevation, NotCopiedDrive.this.armAngle.getPosition());
-            #else
             this(elevation, 0.0);
-            #endif
         }
 
         /**
@@ -140,11 +138,11 @@ public class NotCopiedDrive extends LinearOpMode {
          * Clamps both the elevation and angle to their respective ranges.
          * **/
         public void clamp() {
-            if (this.elevation > 1.0f) this.elevation = 1.0f;
-            if (this.angle > 1.0f) this.angle = 1.0f;
+            if (this.elevation > 1.0f) this.elevation = 1.0;
+            if (this.angle > 1.0f) this.angle = 1.0;
 
-            if (this.elevation < -1.0f) this.elevation = -1.0f;
-            if (this.angle < 0.0f) this.angle = 0.0f;
+            if (this.elevation < -1.0f) this.elevation = -1.0;
+            if (this.angle < 0.0f) this.angle = 0.0;
         }
 
         /**
@@ -152,7 +150,7 @@ public class NotCopiedDrive extends LinearOpMode {
          * **/
         public void apply() {
             #if USE_ELBOW
-            NotCopiedDrive.this.armAngle.setPosition(this.angle);
+            NotCopiedDrive.this.armAngle.setPower(this.angle);
             #endif
             NotCopiedDrive.this.armElevation.setPower(this.elevation);
         }
@@ -166,7 +164,7 @@ public class NotCopiedDrive extends LinearOpMode {
     #if USE_ARM
     public DcMotor armElevation;
     #if USE_ELBOW
-    public Servo armAngle;
+    public DcMotor armAngle;
     #endif
     #endif
 
@@ -189,7 +187,7 @@ public class NotCopiedDrive extends LinearOpMode {
         #if USE_ARM
         this.armElevation = this.hardwareMap.get(DcMotor.class, "armUp");
         #if USE_ELBOW
-        this.armAngle = this.hardwareMap.get(Servo.class, "armangle");
+        this.armAngle = this.hardwareMap.get(DcMotor.class, "armAngle");
         #endif
         #endif
     }
@@ -210,7 +208,7 @@ public class NotCopiedDrive extends LinearOpMode {
                 axial - lateral + yaw,
                 axial + lateral - yaw
         );
-        if (slow) ret.scale(0.25f);
+        if (slow) ret.scale(0.25);
         ret.clamp();
         return ret;
     }
@@ -226,24 +224,8 @@ public class NotCopiedDrive extends LinearOpMode {
         boolean left = this.gamepad1.dpad_left;
         boolean right = this.gamepad1.dpad_right;
 
-        double elevation;
-        //Either neither is being pressed or both are being pressed. Either way, we don't want anything to happen.
-        if (up == down) elevation = 0.0f;
-        //Only up is being pressed: move it up.
-        else if (up) elevation = 1.0f;
-        //Only down is being pressed: move it down.
-        else elevation = -1.0f;
-
-        #if USE_ELBOW
-        double angle = this.armAngle.getPosition();
-        #else
-        double angle = 0.0;
-        #endif
-        //See above for why this is required.
-        if (left != right) {
-            if (left) angle += 0.01f;
-            else angle -= 0.01f;
-        }
+        double elevation = AutoUtil.ternaryXOR(up, down);
+        double angle = AutoUtil.ternaryXOR(left, right);
 
         ArmPowers ret = new ArmPowers(elevation, angle);
         ret.clamp();

@@ -121,4 +121,17 @@ public class AutoUtil {
         while (System.currentTimeMillis() != deadline) if (AutoUtil.shouldStop())
             throw new OpModeInterruptedException("AutoUtil::wait(" + timeoutMillis + ")");
     }
+
+    /**
+     * Compares two booleans. Returns a non-zero value if only one value is true, but the specific value depends on which one is true.
+     * Mostly useful for input measurement.
+     * @param positive Returns 1.0 if it is the only one that is true.
+     * @param negative Returns -1.0 if it is the only one that is true.
+     * @return See above.
+     * **/
+    public static double ternaryXOR(boolean positive, boolean negative) {
+        if (positive == negative) return 0.0;
+        else if (positive) return 1.0;
+        else return -1.0;
+    }
 }

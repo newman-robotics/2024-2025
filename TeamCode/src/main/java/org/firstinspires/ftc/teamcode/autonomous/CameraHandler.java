@@ -21,8 +21,16 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.internal.camera.CameraManagerInternal;
 import org.firstinspires.ftc.robotcore.internal.system.Deadline;
+import org.opencv.calib3d.Calib3d;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfDouble;
+import org.opencv.core.MatOfPoint2f;
+import org.opencv.core.MatOfPoint3f;
+import org.opencv.core.Point;
 
+import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.concurrent.Executor;
@@ -35,6 +43,20 @@ import edu.umich.eecs.april.apriltag.ApriltagNative;
  * Static functions related to the camera.
  * **/
 public class CameraHandler {
+    //Calibrated for Logitech C270 (see teamwebcamcalibrations.xml)
+    static Mat cameraMatrix;
+    static MatOfDouble distCoeffs;
+
+    static {
+        float[] cameraMatrixRaw = {822.317f, 0.f, 319.495f, 0.f, 822.317f, 242.502f, 0.f, 0.f, 1.f};
+        ByteBuffer buffer = ByteBuffer.allocate(36);
+        buffer.asFloatBuffer().put(cameraMatrixRaw);
+        CameraHandler.cameraMatrix = new Mat(3, 3, CvType.CV_32F, buffer);
+
+        double[] distCoeffs = {-0.0449369, 1.17277, 0., 0., -3.63244, 0., 0., 0.};
+        CameraHandler.distCoeffs = new MatOfDouble(distCoeffs);
+    }
+
     /**
      * Field coordinate system:
      * All coordinates range from 0 to 1.
@@ -145,10 +167,13 @@ public class CameraHandler {
     @Nullable
     private static FieldPos getLocationFromDetection(ApriltagDetection tag) {
         RobotLog.d(String.format(Locale.UK, "Detection: ID %d, centre (%f, %f), corners [(%f, %f), (%f, %f), (%f, %f), (%f, %f)]", tag.id, tag.c[0], tag.c[1], tag.p[0], tag.p[1], tag.p[2], tag.p[3], tag.p[4], tag.p[5], tag.p[6], tag.p[7]));
-        /*
+
+        MatOfPoint3f objectPoints = new MatOfPoint3f();
+        MatOfPoint2f imageCorners = new MatOfPoint2f(new Point(tag.c[0], tag.c[1]), new Point(tag.c[2], tag.c[3]), new Point(tag.c[4], tag.c[5]), new Point(tag.c[6], tag.c[7]));
+
         Mat rvec = new Mat(1, 3, CvType.CV_32F), tvec = new Mat(1, 3, CvType.CV_32F);
-        boolean out = Calib3d.solvePnP(new MatOfPoint3f(), new MatOfPoint2f(), new Mat(), new MatOfDouble(), rvec, tvec);
-        */
+        boolean out = Calib3d.solvePnP(objectPoints, imageCorners, CameraHandler.cameraMatrix, CameraHandler.distCoeffs, rvec, tvec);
+
         return null;
     }
 
