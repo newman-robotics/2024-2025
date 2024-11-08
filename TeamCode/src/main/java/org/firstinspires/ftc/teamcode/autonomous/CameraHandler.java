@@ -54,6 +54,8 @@ public class CameraHandler {
 
         double[] distCoeffs = {-0.0449369, 1.17277, 0., 0., -3.63244, 0., 0., 0.};
         CameraHandler.distCoeffs = new MatOfDouble(distCoeffs);
+
+        RobotLog.i("CameraHander setup completed");
     }
 
     /**
