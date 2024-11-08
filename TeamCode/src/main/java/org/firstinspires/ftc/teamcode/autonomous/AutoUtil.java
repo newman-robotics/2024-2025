@@ -1,18 +1,9 @@
 package org.firstinspires.ftc.teamcode.autonomous;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.util.RobotLog;
-
-import org.firstinspires.ftc.robotcore.external.ClassFactory;
-import org.firstinspires.ftc.robotcore.internal.camera.CameraManagerInternal;
-
-import java.util.concurrent.Executor;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 public class AutoUtil {
     public static class OpModeInterruptedException extends Exception {

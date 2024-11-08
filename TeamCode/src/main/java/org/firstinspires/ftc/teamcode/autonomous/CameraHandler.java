@@ -30,7 +30,6 @@ import org.opencv.core.MatOfPoint3f;
 import org.opencv.core.Point;
 
 import java.nio.ByteBuffer;
-import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.concurrent.Executor;
@@ -44,8 +43,8 @@ import edu.umich.eecs.april.apriltag.ApriltagNative;
  * **/
 public class CameraHandler {
     //Calibrated for Logitech C270 (see teamwebcamcalibrations.xml)
-    static Mat cameraMatrix;
-    static MatOfDouble distCoeffs;
+    public static Mat cameraMatrix;
+    public static MatOfDouble distCoeffs;
 
     static {
         float[] cameraMatrixRaw = {822.317f, 0.f, 319.495f, 0.f, 822.317f, 242.502f, 0.f, 0.f, 1.f};
