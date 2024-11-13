@@ -22,7 +22,7 @@ public class AutoMain extends LinearOpMode {
         AutoUtil.setOpMode(this);
 
         try {
-            CameraFrameCallback callback = new CameraFrameCallback((Mat) -> {}, X_SIZE, Y_SIZE);
+            CameraFrameCallback callback = new CameraFrameCallback((Mat) -> {});
             /*CameraCaptureSession.CaptureCallback callback = new CameraCaptureSession.CaptureCallback() {
                 @Override
                 public void onNewFrame(@NonNull CameraCaptureSession session, @NonNull CameraCaptureRequest request, @NonNull CameraFrame cameraFrame) {
