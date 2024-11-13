@@ -2,15 +2,19 @@ package org.firstinspires.ftc.teamcode;
 
 //Whether to use the arm
 #define USE_ARM
-//Whether to use the arm servo (claw)
-//#define USE_ELBOW
+//Whether to use the claw
+#define USE_CLAW
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.autonomous.AutoUtil;
+
+import java.security.acl.NotOwnerException;
 
 //Whatever the name is will appear in the driver hub select display
 @TeleOp(name="New_Code_Juju")
@@ -147,10 +151,75 @@ public class NotCopiedDrive extends LinearOpMode {
          * Applies these powers to the robot's motors.
          * **/
         public void apply() {
-            #if USE_ELBOW
             NotCopiedDrive.this.armAngle.setPower(this.angle);
-            #endif
             NotCopiedDrive.this.armElevation.setPower(this.elevation);
+        }
+    }
+    #endif
+
+    #if USE_CLAW
+    /**
+     * Represents powers of the claw.
+     * **/
+    public class ClawPowers {
+        private double orientation;
+        private double power;
+
+        /**
+         * Default constructor: zero-initialises everything.
+         * **/
+        public ClawPowers() {
+            this(0.0);
+        }
+
+        /**
+         * Sets the intake power to the given power, and maintains the current claw angle state.
+         * @param power The intake power.
+         * **/
+        public ClawPowers(double power) {
+            this(NotCopiedDrive.this.clawAngle.getPosition(), power);
+        }
+
+        /**
+         * Creates a new ClawPowers from the given powers.
+         * @param power The intake power.
+         * @param orientation The claw orientation.
+         * **/
+        public ClawPowers(double orientation, double power) {
+            this.orientation = orientation;
+            this.power = power;
+        }
+
+        public double getOrientation() {
+            return orientation;
+        }
+        public double getPower() {
+            return power;
+        }
+        public void setOrientation(double orientation) {
+            this.orientation = orientation;
+        }
+        public void setPower(double power) {
+            this.power = power;
+        }
+
+        /**
+         * Clamps both the orientation and their power to their respective ranges.
+         * **/
+        public void clamp() {
+            if (this.power > 1.0) this.power = 1.0;
+            if (this.orientation > 1.0) this.orientation = 1.0;
+
+            if (this.power < -1.0) this.power = -1.0;
+            if (this.orientation < 0.0) this.orientation = 0.0;
+        }
+
+        /**
+         * Applies these powers to the robot's motors.
+         * **/
+        public void apply() {
+            NotCopiedDrive.this.clawIntake.setPower(this.power);
+            NotCopiedDrive.this.clawAngle.setPosition(this.orientation);
         }
     }
     #endif
@@ -161,9 +230,12 @@ public class NotCopiedDrive extends LinearOpMode {
     public DcMotor backRight;
     #if USE_ARM
     public DcMotor armElevation;
-    #if USE_ELBOW
     public DcMotor armAngle;
     #endif
+
+    #if USE_CLAW
+    public Servo clawAngle;
+    public CRServo clawIntake;
     #endif
 
     /**
@@ -183,10 +255,16 @@ public class NotCopiedDrive extends LinearOpMode {
         this.backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         #if USE_ARM
-        this.armElevation = this.hardwareMap.get(DcMotor.class, "armUp");
-        #if USE_ELBOW
-        this.armAngle = this.hardwareMap.get(DcMotor.class, "armAngle");
+        this.armElevation = this.hardwareMap.get(DcMotor.class, "actuator");
+        this.armAngle = this.hardwareMap.get(DcMotor.class, "elbow");
+
+        this.armElevation.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        this.armAngle.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         #endif
+
+        #if USE_CLAW
+        this.clawAngle = this.hardwareMap.get(Servo.class, "");
+        this.clawIntake = this.hardwareMap.get(CRServo.class, "");
         #endif
     }
 
@@ -195,9 +273,9 @@ public class NotCopiedDrive extends LinearOpMode {
      * @return The motor powers, which can be directly applied to the motors with one function call.
      * **/
     public MotorPowers getMotorPowers() {
-        double axial = -this.gamepad1.left_stick_x;
-        double lateral = this.gamepad1.left_stick_y;
-        double yaw = this.gamepad1.right_stick_x;
+        double axial = AutoUtil.twoWayThreshold(-this.gamepad1.left_stick_x, -0.7, 0.7);
+        double lateral = AutoUtil.twoWayThreshold(this.gamepad1.left_stick_y, -0.7, 0.7);
+        double yaw =AutoUtil.twoWayThreshold(this.gamepad1.right_stick_x, -0.7, 0.7);
         boolean slow = this.gamepad1.a;
 
         MotorPowers ret = new MotorPowers(
@@ -231,6 +309,25 @@ public class NotCopiedDrive extends LinearOpMode {
     }
     #endif
 
+    #if USE_CLAW
+    /**
+     * Returns the claw powers calculated from the gamepad.
+     * @return The claw powers, which can be directly applied to the motors with one function call.
+     * **/
+    public ClawPowers getClawPowers() {
+        double intake = AutoUtil.twoWayThreshold(this.gamepad1.right_stick_x, -0.7, 0.7);
+        boolean up = this.gamepad1.left_bumper;
+        boolean down = this.gamepad1.right_bumper;
+
+        double position = AutoUtil.ternaryXOR(up, down);
+        position = this.clawAngle.getPosition() + position * 0.05;
+
+        ClawPowers ret = new ClawPowers(position, intake);
+        ret.clamp();
+        return ret;
+    }
+    #endif
+
     //NO PASTING
     @Override
     public void runOpMode() throws InterruptedException {
@@ -245,12 +342,20 @@ public class NotCopiedDrive extends LinearOpMode {
             ArmPowers armPowers = this.getArmPowers();
             armPowers.apply();
             #endif
+
+            #if USE_CLAW
+            ClawPowers clawPowers = this.getClawPowers();
+            clawPowers.apply();
+            #endif
         }
 
         //Brakes the robot.
         new MotorPowers().apply();
         #if USE_ARM
         new ArmPowers().apply();
+        #endif
+        #if USE_CLAW
+        new ClawPowers().apply();
         #endif
     }
 }

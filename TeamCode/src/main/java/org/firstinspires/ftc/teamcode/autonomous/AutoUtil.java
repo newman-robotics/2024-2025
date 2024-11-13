@@ -125,4 +125,15 @@ public class AutoUtil {
         else if (positive) return 1.0;
         else return -1.0;
     }
+
+    /**
+     * If lower < in < upper, return 0. Otherwise, return in.
+     * @param in The input.
+     * @param lower The lower bound.
+     * @param upper The upper bound.
+     * **/
+    public static double twoWayThreshold(double in, double lower, double upper) {
+        if (in > lower && in < upper) return 0;
+        return in;
+    }
 }

@@ -22,20 +22,14 @@ import java.util.function.Consumer;
  * **/
 public class CameraFrameCallback implements CameraCaptureSession.CaptureCallback {
     private final Consumer<Mat> callback;
-    private final int xSize;
-    private final int ySize;
     private Bitmap lastBitmap;
 
     /**
      * Creates a camera frame callback from the given consumer. For some reason, there's no way to dynamically fetch the size of a frame from the camera callback itself, so they must be provided here.
      * @param callback The consumer to be called on every frame.
-     * @param xSize The width of the image. Must be the same as what is passed to the camera.
-     * @param ySize The height of the image. Must be the same as what is passed to the camera.
      * **/
-    public CameraFrameCallback(Consumer<Mat> callback, int xSize, int ySize) {
+    public CameraFrameCallback(Consumer<Mat> callback) {
         this.callback = callback;
-        this.xSize = xSize;
-        this.ySize = ySize;
     }
 
     /**
@@ -47,14 +41,13 @@ public class CameraFrameCallback implements CameraCaptureSession.CaptureCallback
 
         byte[] rawData = cameraFrame.getImageData();
         if (rawData.length == 0) {
-            RobotLog.e("Failed to find camera data!");
+            RobotLog.e("Failed to find camera frame image data!");
             this.lastBitmap = null;
-        }
-        else {
+        } else {
             this.lastBitmap = request.createEmptyBitmap();
             cameraFrame.copyToBitmap(this.lastBitmap);
             ByteBuffer data = ByteBuffer.wrap(rawData);
-            Mat cvFrame = new Mat(this.xSize, this.ySize, CvType.CV_8U, data);
+            Mat cvFrame = new Mat(cameraFrame.getSize().getWidth(), cameraFrame.getSize().getHeight(), CvType.CV_8U, data);
             callback.accept(cvFrame);
         }
     }
