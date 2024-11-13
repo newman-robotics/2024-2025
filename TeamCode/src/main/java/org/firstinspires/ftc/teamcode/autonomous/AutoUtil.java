@@ -90,8 +90,13 @@ public class AutoUtil {
             this.armElevation = map.get(DcMotor.class, GlobalConstants.ARM_VERTICAL_MOTOR_NAME);
             this.armElbow = map.get(DcMotor.class, GlobalConstants.ARM_ELBOW_MOTOR_NAME);
 
-            this.clawWrist = map.get(Servo.class, GlobalConstants.CLAW_WRIST_MOTOR_NAME);
-            this.clawIntake = map.get(CRServo.class, GlobalConstants.CLAW_INTAKE_MOTOR_NAME);
+            if (GlobalConstants.CLAW_IS_INSTALLED) {
+                this.clawWrist = map.get(Servo.class, GlobalConstants.CLAW_WRIST_MOTOR_NAME);
+                this.clawIntake = map.get(CRServo.class, GlobalConstants.CLAW_INTAKE_MOTOR_NAME);
+            } else {
+                this.clawWrist = null;
+                this.clawIntake = null;
+            }
 
             this.backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
 
@@ -136,7 +141,7 @@ public class AutoUtil {
             this.armElevation.setPower(0);
             this.armElbow.setPower(0);
 
-            this.clawIntake.setPower(0);
+            if (GlobalConstants.CLAW_IS_INSTALLED) this.clawIntake.setPower(0);
         }
 
         /**
@@ -169,8 +174,10 @@ public class AutoUtil {
          * @param intake Intake motor power.
          * **/
         public void setClawPowers(double wrist, double intake) {
-            this.clawWrist.setPosition(AutoUtil.clamp(this.clawWrist.getPosition() + wrist, 0, 1));
-            this.clawIntake.setPower(AutoUtil.clamp(intake, -1, 1));
+            if (GlobalConstants.CLAW_IS_INSTALLED) {
+                this.clawWrist.setPosition(AutoUtil.clamp(this.clawWrist.getPosition() + wrist, 0, 1));
+                this.clawIntake.setPower(AutoUtil.clamp(intake, -1, 1));
+            }
         }
 
         public void setClawWristAbsolutePosition(double position) {

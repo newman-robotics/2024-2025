@@ -30,6 +30,7 @@ public class CameraFrameCallback implements CameraCaptureSession.CaptureCallback
      * **/
     public CameraFrameCallback(Consumer<Mat> callback) {
         this.callback = callback;
+        RobotLog.i("Constructed CameraFrameCallback...");
     }
 
     /**

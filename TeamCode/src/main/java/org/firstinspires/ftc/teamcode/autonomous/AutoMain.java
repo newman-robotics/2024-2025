@@ -2,10 +2,12 @@ package org.firstinspires.ftc.teamcode.autonomous;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.Camera;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraException;
 import org.firstinspires.ftc.robotcore.external.stream.CameraStreamServer;
+import org.opencv.core.Mat;
 
 @Autonomous(name="AutoMain")
 public class AutoMain extends LinearOpMode {
@@ -21,16 +23,15 @@ public class AutoMain extends LinearOpMode {
 
         AutoUtil.setOpMode(this);
 
+        RobotLog.i("Initialising...");
+
         try {
-            CameraFrameCallback callback = new CameraFrameCallback((Mat) -> {});
-            /*CameraCaptureSession.CaptureCallback callback = new CameraCaptureSession.CaptureCallback() {
-                @Override
-                public void onNewFrame(@NonNull CameraCaptureSession session, @NonNull CameraCaptureRequest request, @NonNull CameraFrame cameraFrame) {
-                    RobotLog.i("received frame from camera!");
-                }
-            };*/
+            RobotLog.i("Creating callback...");
+            CameraFrameCallback callback = new CameraFrameCallback((Mat mat) -> RobotLog.i("яппи!"));
+            RobotLog.i("Creating camera...");
             camera = CameraHandler.createCamera(this.hardwareMap, X_SIZE, Y_SIZE, callback);
             if (camera == null) throw new RuntimeException("Failed to open camera (check logs for details)");
+            RobotLog.i("Setting camera stream source...");
             CameraStreamServer.getInstance().setSource(callback.getCameraStreamSource());
         } catch (CameraException | AutoUtil.OpModeInterruptedException e) {
             throw new RuntimeException(e);

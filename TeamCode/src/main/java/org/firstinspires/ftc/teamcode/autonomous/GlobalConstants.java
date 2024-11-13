@@ -53,4 +53,6 @@ public class GlobalConstants {
     public static final GamepadInput ARM_ELBOW_MODIFIER = GamepadInput.RIGHT_BUMPER;
     public static final GamepadInput CLAW_INTAKE_MODIFIER = GamepadInput.LEFT_TRIGGER;
     public static final GamepadInput CLAW_WRIST_MODIFIER = GamepadInput.RIGHT_TRIGGER;
+
+    public static final boolean CLAW_IS_INSTALLED = false;
 }

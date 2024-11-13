@@ -91,11 +91,15 @@ public class CameraHandler {
      * **/
     @Nullable
     public static Camera createCamera(@NonNull HardwareMap map, int xSize, int ySize, @NonNull CameraCaptureSession.CaptureCallback frameCallback) throws CameraException, AutoUtil.OpModeInterruptedException {
+        RobotLog.i("Getting cameraManager...");
         CameraManager cameraManager = ClassFactory.getInstance().getCameraManager();
+        RobotLog.i("Getting serial thread pool...");
         Executor serialThreadPool = ((CameraManagerInternal)cameraManager).getSerialThreadPool();
-        WebcamName name = map.get(WebcamName.class, "webcam");
+        RobotLog.i("Getting WebcamName...");
+        WebcamName name = map.get(WebcamName.class, GlobalConstants.WEBCAM_NAME);
         AutoUtil.Counter cameraCreated = new AutoUtil.Counter(1);
         AutoUtil.Value<Camera> cameraWrapper = new AutoUtil.Value<Camera>();
+        RobotLog.i("Opening camera...");
         cameraManager.requestPermissionAndOpenCamera(new Deadline(5000, TimeUnit.MILLISECONDS), name, Continuation.create(serialThreadPool, new Camera.StateCallback() {
             @Override public void onOpened(@NonNull Camera camera) {
                 RobotLog.i("Camera " + camera + " successfully opened");
@@ -113,6 +117,7 @@ public class CameraHandler {
                 cameraCreated.decrement();
             }
         }));
+        RobotLog.i("Waiting...");
         AutoUtil.waitOnCounter(cameraCreated, 5000);
         Camera camera = cameraWrapper.value;
         if (camera != null) {
