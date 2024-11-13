@@ -1,15 +1,22 @@
 package org.firstinspires.ftc.teamcode.autonomous;
 
+import android.provider.Settings;
+
 import androidx.annotation.NonNull;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.RobotLog;
 
+/**
+ * Various static functions.
+ * (When I say various, I mean there's a little bit of everything in here.)
+ * **/
 public class AutoUtil {
     public static class OpModeInterruptedException extends Exception {
         public OpModeInterruptedException() {
@@ -257,5 +264,63 @@ public class AutoUtil {
      * **/
     public static double clamp(double in, double lower, double upper) {
         return Math.min(Math.max(in, lower), upper);
+    }
+
+    /**
+     * Gets an input from AutoUtil.opMode.gamepad1.
+     * @param input The input to measure.
+     * @return The raw value if the input is a double, or value ? 1.0 : 0.0 if the value is a boolean.
+     * **/
+    public static double parseGamepadInputAsDouble(GlobalConstants.GamepadInput input) {
+        switch (input) {
+            case LEFT_STICK_X: return AutoUtil.opMode.gamepad1.left_stick_x;
+            case LEFT_STICK_Y: return AutoUtil.opMode.gamepad1.left_stick_y;
+            case RIGHT_STICK_X: return AutoUtil.opMode.gamepad1.right_stick_x;
+            case RIGHT_STICK_Y: return AutoUtil.opMode.gamepad1.right_stick_y;
+            case BUTTON_A: return AutoUtil.opMode.gamepad1.a ? 1 : 0;
+            case BUTTON_B: return AutoUtil.opMode.gamepad1.b ? 1 : 0;
+            case BUTTON_X: return AutoUtil.opMode.gamepad1.x ? 1 : 0;
+            case BUTTON_Y: return AutoUtil.opMode.gamepad1.y ? 1 : 0;
+            case DPAD_UP: return AutoUtil.opMode.gamepad1.dpad_up ? 1 : 0;
+            case DPAD_DOWN: return AutoUtil.opMode.gamepad1.dpad_down ? 1 : 0;
+            case DPAD_LEFT: return AutoUtil.opMode.gamepad1.dpad_left ? 1 : 0;
+            case DPAD_RIGHT: return AutoUtil.opMode.gamepad1.dpad_right ? 1 : 0;
+            case LEFT_TRIGGER: return AutoUtil.opMode.gamepad1.left_trigger;
+            case RIGHT_TRIGGER: return AutoUtil.opMode.gamepad1.right_trigger;
+            case LEFT_BUMPER: return AutoUtil.opMode.gamepad1.left_bumper ? 1 : 0;
+            case RIGHT_BUMPER: return AutoUtil.opMode.gamepad1.right_bumper ? 1 : 0;
+            case LEFT_STICK_BUTTON: return AutoUtil.opMode.gamepad1.left_stick_button ? 1 : 0;
+            case RIGHT_STICK_BUTTON: return AutoUtil.opMode.gamepad1.right_stick_button ? 1 : 0;
+            default: throw new IllegalArgumentException("Illegal GlobalConstants.GamepadInput " + input + "!");
+        }
+    }
+
+    /**
+     * Gets an input from AutoUtil.opMode.gamepad1.
+     * @param input The input to measure.
+     * @return The raw value if the input is a boolean, or value > GlobalConstants.GAMEPAD_THRESHOLD if the value is a double.
+     * **/
+    public static boolean parseGamepadInputAsBoolean(GlobalConstants.GamepadInput input) {
+        switch (input) {
+            case LEFT_STICK_X: return AutoUtil.opMode.gamepad1.left_stick_x > GlobalConstants.GAMEPAD_THRESHOLD;
+            case LEFT_STICK_Y: return AutoUtil.opMode.gamepad1.left_stick_y > GlobalConstants.GAMEPAD_THRESHOLD;
+            case RIGHT_STICK_X: return AutoUtil.opMode.gamepad1.right_stick_x > GlobalConstants.GAMEPAD_THRESHOLD;
+            case RIGHT_STICK_Y: return AutoUtil.opMode.gamepad1.right_stick_y > GlobalConstants.GAMEPAD_THRESHOLD;
+            case BUTTON_A: return AutoUtil.opMode.gamepad1.a;
+            case BUTTON_B: return AutoUtil.opMode.gamepad1.b;
+            case BUTTON_X: return AutoUtil.opMode.gamepad1.x;
+            case BUTTON_Y: return AutoUtil.opMode.gamepad1.y;
+            case DPAD_UP: return AutoUtil.opMode.gamepad1.dpad_up;
+            case DPAD_DOWN: return AutoUtil.opMode.gamepad1.dpad_down;
+            case DPAD_LEFT: return AutoUtil.opMode.gamepad1.dpad_left;
+            case DPAD_RIGHT: return AutoUtil.opMode.gamepad1.dpad_right;
+            case LEFT_TRIGGER: return AutoUtil.opMode.gamepad1.left_trigger > GlobalConstants.GAMEPAD_THRESHOLD;
+            case RIGHT_TRIGGER: return AutoUtil.opMode.gamepad1.right_trigger > GlobalConstants.GAMEPAD_THRESHOLD;
+            case LEFT_BUMPER: return AutoUtil.opMode.gamepad1.left_bumper;
+            case RIGHT_BUMPER: return AutoUtil.opMode.gamepad1.right_bumper;
+            case LEFT_STICK_BUTTON: return AutoUtil.opMode.gamepad1.left_stick_button;
+            case RIGHT_STICK_BUTTON: return AutoUtil.opMode.gamepad1.right_stick_button;
+            default: throw new IllegalArgumentException("Illegal GlobalConstants.GamepadInput " + input + "!");
+        }
     }
 }
