@@ -20,7 +20,7 @@ public class SimpleAutonomous extends LinearOpMode {
         ROTRIGHT
     }
 
-    DcMotor frontLeft, frontRight, backLeft, backRight;
+    AutoUtil.Hardware hardware;
 
     /**
      * Moves the robot for the specified time.
@@ -32,40 +32,22 @@ public class SimpleAutonomous extends LinearOpMode {
     public void move(Direction direction, long millis, float speed) throws AutoUtil.OpModeInterruptedException {
         switch (direction) {
             case FORWARD:
-                this.frontLeft.setPower(speed);
-                this.frontRight.setPower(speed);
-                this.backLeft.setPower(speed);
-                this.backRight.setPower(speed);
+                hardware.setDrivetrainPowers(speed, speed, speed, speed);
                 break;
             case BACKWARD:
-                this.frontLeft.setPower(-speed);
-                this.frontRight.setPower(-speed);
-                this.backLeft.setPower(-speed);
-                this.backRight.setPower(-speed);
+                hardware.setDrivetrainPowers(-speed, -speed, -speed, -speed);
                 break;
             case LEFT:
-                this.frontLeft.setPower(-speed);
-                this.frontRight.setPower(speed);
-                this.backLeft.setPower(speed);
-                this.backRight.setPower(-speed);
+                hardware.setDrivetrainPowers(-speed, speed, speed, -speed);
                 break;
             case RIGHT:
-                this.frontLeft.setPower(speed);
-                this.frontRight.setPower(-speed);
-                this.backLeft.setPower(-speed);
-                this.backRight.setPower(speed);
+                hardware.setDrivetrainPowers(speed, -speed, -speed, speed);
                 break;
             case ROTLEFT:
-                this.frontLeft.setPower(-speed);
-                this.frontRight.setPower(speed);
-                this.backLeft.setPower(-speed);
-                this.backRight.setPower(speed);
+                hardware.setDrivetrainPowers(-speed, speed, -speed, speed);
                 break;
             case ROTRIGHT:
-                this.frontLeft.setPower(speed);
-                this.frontRight.setPower(-speed);
-                this.backLeft.setPower(speed);
-                this.backRight.setPower(-speed);
+                hardware.setDrivetrainPowers(speed, -speed, speed, -speed);
                 break;
             default:
                 throw new RuntimeException("SimpleAutonomous::move: bad direction!");
@@ -85,26 +67,12 @@ public class SimpleAutonomous extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         AutoUtil.setOpMode(this);
-
-        this.frontLeft = this.hardwareMap.get(DcMotor.class, "drivefl");
-        this.frontRight = this.hardwareMap.get(DcMotor.class, "drivefr");
-        this.backLeft = this.hardwareMap.get(DcMotor.class, "drivebl");
-        this.backRight = this.hardwareMap.get(DcMotor.class, "drivebr");
-
-        this.backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-
-        this.frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        this.frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        this.backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        this.backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        this.hardware = AutoUtil.Hardware.init(this.hardwareMap);
 
         this.waitForStart();
 
         this.run(.2f);
 
-        this.frontLeft.setPower(0.0f);
-        this.frontRight.setPower(0.0f);
-        this.backLeft.setPower(0.0f);
-        this.backRight.setPower(0.0f);
+        this.hardware.zeroOut();
     }
 }

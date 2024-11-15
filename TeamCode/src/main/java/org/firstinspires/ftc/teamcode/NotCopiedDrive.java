@@ -13,7 +13,7 @@ import org.firstinspires.ftc.teamcode.autonomous.GlobalConstants;
 import java.security.acl.NotOwnerException;
 
 //Whatever the name is will appear in the driver hub select display
-@TeleOp(name="New_Code_Juju")
+@TeleOp(name="Modus Operandi")
 public class NotCopiedDrive extends LinearOpMode {
     public AutoUtil.Hardware hardware;
 
