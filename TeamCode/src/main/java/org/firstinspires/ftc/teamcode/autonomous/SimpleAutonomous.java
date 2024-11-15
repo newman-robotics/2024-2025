@@ -52,7 +52,13 @@ public class SimpleAutonomous extends LinearOpMode {
 
     public void run() {
         try {
-            this.move(Direction.RIGHT, GlobalConstants.MOTION_MILLIS_TILE * 2, GlobalConstants.MOTION_SPEED);
+            this.move(Direction.RIGHT, GlobalConstants.MOTION_MILLIS_TILE, GlobalConstants.MOTION_SPEED);
+        } catch (AutoUtil.OpModeInterruptedException e) {
+            RobotLog.e(e.getMessage());
+        }
+
+        try {
+            this.move(Direction.LEFT, GlobalConstants.MOTION_MILLIS_TILE, GlobalConstants.MOTION_SPEED);
         } catch (AutoUtil.OpModeInterruptedException e) {
             RobotLog.e(e.getMessage());
         }
