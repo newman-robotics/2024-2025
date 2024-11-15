@@ -99,6 +99,8 @@ public class AutoUtil {
             }
 
             this.backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+            this.backRight.setDirection(DcMotorSimple.Direction.REVERSE);
+            this.frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
 
             this.frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             this.frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);

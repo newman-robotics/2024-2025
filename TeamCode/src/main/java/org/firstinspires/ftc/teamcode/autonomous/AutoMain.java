@@ -1,13 +1,20 @@
 package org.firstinspires.ftc.teamcode.autonomous;
 
+import androidx.annotation.NonNull;
+
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.Camera;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraCaptureRequest;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraCaptureSession;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraException;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraFrame;
 import org.firstinspires.ftc.robotcore.external.stream.CameraStreamServer;
 import org.opencv.core.Mat;
+
+import edu.umich.eecs.april.apriltag.ApriltagNative;
 
 @Autonomous(name="AutoMain")
 public class AutoMain extends LinearOpMode {
@@ -23,11 +30,16 @@ public class AutoMain extends LinearOpMode {
 
         AutoUtil.setOpMode(this);
 
+        RobotLog.i("Initialising AprilTags...");
+
+        //idk if these configs are right but let's pray...
+        ApriltagNative.apriltag_init("tag36h11", 0, 8, 0, 4);
+
         RobotLog.i("Initialising...");
 
         try {
             RobotLog.i("Creating callback...");
-            CameraFrameCallback callback = new CameraFrameCallback((Mat mat) -> RobotLog.i("яппи!"));
+            CameraFrameCallback callback = new CameraFrameCallback(CameraHandler::getLocationOnBoard);
             RobotLog.i("Creating camera...");
             camera = CameraHandler.createCamera(this.hardwareMap, X_SIZE, Y_SIZE, callback);
             if (camera == null) throw new RuntimeException("Failed to open camera (check logs for details)");

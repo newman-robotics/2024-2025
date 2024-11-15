@@ -13,6 +13,7 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraFrame;
 import org.firstinspires.ftc.robotcore.external.stream.CameraStreamSource;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfByte;
 
 import java.nio.ByteBuffer;
 import java.util.function.Consumer;
@@ -44,13 +45,14 @@ public class CameraFrameCallback implements CameraCaptureSession.CaptureCallback
         if (rawData.length == 0) {
             RobotLog.e("Failed to find camera frame image data!");
             this.lastBitmap = null;
-        } else {
-            this.lastBitmap = request.createEmptyBitmap();
-            cameraFrame.copyToBitmap(this.lastBitmap);
-            ByteBuffer data = ByteBuffer.wrap(rawData);
-            Mat cvFrame = new Mat(cameraFrame.getSize().getWidth(), cameraFrame.getSize().getHeight(), CvType.CV_8U, data);
-            callback.accept(cvFrame);
+            return;
         }
+
+        this.lastBitmap = request.createEmptyBitmap();
+        cameraFrame.copyToBitmap(this.lastBitmap);
+        Mat cvFrame = new MatOfByte(rawData).reshape(0, new int[]{cameraFrame.getSize().getHeight(), cameraFrame.getSize().getWidth()});
+        RobotLog.i("CameraFrame size: (" + cameraFrame.getSize().getWidth() + ", " + cameraFrame.getSize().getHeight() + "), Mat size: (" + cvFrame.size().width + ", " + cvFrame.size().height + ")");
+        callback.accept(cvFrame);
     }
 
     /**

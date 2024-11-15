@@ -16,6 +16,7 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraCaptureReq
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraCaptureSequenceId;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraCaptureSession;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraException;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraFrame;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraManager;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -25,11 +26,13 @@ import org.opencv.calib3d.Calib3d;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfDouble;
+import org.opencv.core.MatOfFloat;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.MatOfPoint3f;
 import org.opencv.core.Point;
 
 import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.concurrent.Executor;
@@ -47,15 +50,17 @@ public class CameraHandler {
     public static MatOfDouble distCoeffs;
 
     static {
+        RobotLog.i("Creating calibration matrices...");
+
         float[] cameraMatrixRaw = {822.317f, 0.f, 319.495f, 0.f, 822.317f, 242.502f, 0.f, 0.f, 1.f};
-        ByteBuffer buffer = ByteBuffer.allocate(36);
-        buffer.asFloatBuffer().put(cameraMatrixRaw);
-        CameraHandler.cameraMatrix = new Mat(3, 3, CvType.CV_32F, buffer);
+        CameraHandler.cameraMatrix = new MatOfFloat(cameraMatrixRaw)/*.reshape(0, new int[]{3, 3})*/;
+
+        RobotLog.i("Created camera matrix...");
 
         double[] distCoeffs = {-0.0449369, 1.17277, 0., 0., -3.63244, 0., 0., 0.};
         CameraHandler.distCoeffs = new MatOfDouble(distCoeffs);
 
-        RobotLog.i("CameraHander setup completed");
+        RobotLog.i("CameraHandler setup completed");
     }
 
     /**
@@ -190,15 +195,14 @@ public class CameraHandler {
      * **/
     @Nullable
     public static FieldPos getLocationOnBoard(Mat frame) {
-        //idk if these configs are right but let's pray...
-        ApriltagNative.apriltag_init("36h11", 0, 8, 0, 4);
         int length = (int)(frame.elemSize() * frame.total());
         byte[] buffer = new byte[length];
         frame.get(0, 0, buffer);
         ArrayList<ApriltagDetection> tags = ApriltagNative.apriltag_detect_yuv(buffer, frame.cols(), frame.rows());
         for (ApriltagDetection tag : tags) {
-            FieldPos position = getLocationFromDetection(tag);
-            if (position != null) return position;
+            RobotLog.i("Found AprilTag with corners: (" + tag.c[0] + "," + tag.c[1] + "), (" + tag.c[0] + "," + tag.c[1] + "), (" + tag.c[0] + "," + tag.c[1] + "), (" + tag.c[0] + "," + tag.c[1] + ")");
+            //FieldPos position = getLocationFromDetection(tag);
+            //if (position != null) return position;
         }
         return null;
     }
