@@ -59,6 +59,8 @@ public class NotCopiedDrive extends LinearOpMode {
 
         this.waitForStart();
 
+        this.hardware.setClawWristAbsolutePosition(0);
+
         while (this.opModeIsActive()) {
             this.updateDrivetrain();
             this.updateArmClaw();
