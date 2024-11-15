@@ -55,4 +55,8 @@ public class GlobalConstants {
     public static final GamepadInput CLAW_WRIST_MODIFIER = GamepadInput.RIGHT_TRIGGER;
 
     public static final boolean CLAW_IS_INSTALLED = false;
+
+    public static final long MOTION_MILLIS_TILE_FULL_SPEED = 0;
+    public static final double MOTION_SPEED = 1.0;
+    public static final long MOTION_MILLIS_TILE = (long)Math.floor(MOTION_MILLIS_TILE_FULL_SPEED / MOTION_SPEED);
 }

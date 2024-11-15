@@ -2,14 +2,9 @@ package org.firstinspires.ftc.teamcode.autonomous;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.RobotLog;
 
-import java.nio.channels.InterruptedByTimeoutException;
-
-@Autonomous(name="SimpleAutonomous")
+@Autonomous(name = "SimpleAutonomous")
 public class SimpleAutonomous extends LinearOpMode {
     public enum Direction {
         FORWARD,
@@ -29,7 +24,7 @@ public class SimpleAutonomous extends LinearOpMode {
      * @param speed The speed at which to move the robot.
      * @throws AutoUtil.OpModeInterruptedException Throws if the OpMode is interrupted or deactivates.
      * **/
-    public void move(Direction direction, long millis, float speed) throws AutoUtil.OpModeInterruptedException {
+    public void move(Direction direction, long millis, double speed) throws AutoUtil.OpModeInterruptedException {
         switch (direction) {
             case FORWARD:
                 hardware.setDrivetrainPowers(speed, speed, speed, speed);
@@ -55,10 +50,9 @@ public class SimpleAutonomous extends LinearOpMode {
         AutoUtil.safeWait(millis);
     }
 
-    public void run(float speed) {
+    public void run() {
         try {
-            this.move(Direction.FORWARD, 1500, speed);
-            this.move(Direction.LEFT, 1000, speed);
+            this.move(Direction.RIGHT, GlobalConstants.MOTION_MILLIS_TILE * 2, GlobalConstants.MOTION_SPEED);
         } catch (AutoUtil.OpModeInterruptedException e) {
             RobotLog.e(e.getMessage());
         }
@@ -71,7 +65,7 @@ public class SimpleAutonomous extends LinearOpMode {
 
         this.waitForStart();
 
-        this.run(.2f);
+        this.run();
 
         this.hardware.zeroOut();
     }

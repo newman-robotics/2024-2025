@@ -177,11 +177,12 @@ public class AutoUtil {
             if (GlobalConstants.CLAW_IS_INSTALLED) {
                 this.clawWrist.setPosition(AutoUtil.clamp(this.clawWrist.getPosition() + wrist, 0, 1));
                 this.clawIntake.setPower(AutoUtil.clamp(intake, -1, 1));
-            }
+            } else RobotLog.w("AutoUtil::Hardware::setClawPowers() called, but claw is not installed!");
         }
 
         public void setClawWristAbsolutePosition(double position) {
-            this.clawWrist.setPosition(position);
+            if (GlobalConstants.CLAW_IS_INSTALLED) this.clawWrist.setPosition(position);
+            else RobotLog.w("AutoUtil::Hardware::setClawWristAbsolutePosition() called, but claw is not installed!");
         }
     }
 
