@@ -57,6 +57,8 @@ public class GlobalConstants {
     public static final double ARM_ELBOW_TICK_MODIFIER = 100.0;
     public static final double ARM_ELBOW_SPEED = 0.8;
 
+    public static final double CLAW_WRIST_POSITION_MODIFIER = 0.01;
+
     public static final boolean CLAW_IS_INSTALLED = true;
 
     //Forward

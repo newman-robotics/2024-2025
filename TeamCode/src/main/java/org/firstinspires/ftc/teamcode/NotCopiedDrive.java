@@ -49,7 +49,7 @@ public class NotCopiedDrive extends LinearOpMode {
         }
         //X ? Y : Z ==== if X is true then do Y, but if not do Z
         this.hardware.setArmPowers(armElevation ? stick : 0, armElbow ? (int)(stick * GlobalConstants.ARM_ELBOW_TICK_MODIFIER) : 0);
-        this.hardware.setClawPowers(clawWrist ? stick : 0, clawIntake ? stick : 0);
+        this.hardware.setClawPowers(clawWrist ? stick * GlobalConstants.CLAW_WRIST_POSITION_MODIFIER : 0, clawIntake ? stick : 0);
     }
 
     @Override
