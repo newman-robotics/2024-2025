@@ -8,5 +8,5 @@ include ':FtcRobotController'
 include ':TeamCode'
 include ':OpenCV'
 project(':OpenCV').projectDir = new File(rootDir, 'libs/OpenCV-android-sdk/sdk/')
-include ':AprilTags'
-project(':AprilTags').projectDir = new File(rootDir, 'libs/apriltag-android-1.2')
+//include ':AprilTags'
+//project(':AprilTags').projectDir = new File(rootDir, 'libs/apriltag-android-1.2')

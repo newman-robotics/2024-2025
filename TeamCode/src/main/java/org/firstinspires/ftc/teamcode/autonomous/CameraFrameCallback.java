@@ -11,11 +11,19 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraCaptureReq
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraCaptureSession;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraFrame;
 import org.firstinspires.ftc.robotcore.external.stream.CameraStreamSource;
+import org.firstinspires.ftc.robotcore.internal.camera.libuvc.constants.UvcFrameFormat;
+import org.opencv.android.Utils;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
+import org.opencv.core.Point;
+import org.opencv.core.Rect;
+import org.opencv.core.Scalar;
+import org.opencv.imgproc.Imgproc;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 
 /**
@@ -26,8 +34,8 @@ public class CameraFrameCallback implements CameraCaptureSession.CaptureCallback
     private Bitmap lastBitmap;
 
     /**
-     * Creates a camera frame callback from the given consumer. For some reason, there's no way to dynamically fetch the size of a frame from the camera callback itself, so they must be provided here.
-     * @param callback The consumer to be called on every frame.
+     * Creates a camera frame callback from the given consumer.
+     * @param callback The consumer to be called on every frame. (The frame is RGB.)
      * **/
     public CameraFrameCallback(Consumer<Mat> callback) {
         this.callback = callback;
@@ -39,7 +47,7 @@ public class CameraFrameCallback implements CameraCaptureSession.CaptureCallback
      * **/
     @Override
     public void onNewFrame(@NonNull CameraCaptureSession session, @NonNull CameraCaptureRequest request, @NonNull CameraFrame cameraFrame) {
-        RobotLog.i("CameraFrameCallback::onNewFrame(" + cameraFrame.getFrameNumber() + ")...");
+        if (cameraFrame.getFrameNumber() % 10 == 0) RobotLog.i("CameraFrameCallback::onNewFrame(" + cameraFrame.getFrameNumber() + ")...");
 
         byte[] rawData = cameraFrame.getImageData();
         if (rawData.length == 0) {
@@ -49,9 +57,37 @@ public class CameraFrameCallback implements CameraCaptureSession.CaptureCallback
         }
 
         this.lastBitmap = request.createEmptyBitmap();
-        cameraFrame.copyToBitmap(this.lastBitmap);
-        Mat cvFrame = new MatOfByte(rawData).reshape(0, new int[]{cameraFrame.getSize().getHeight(), cameraFrame.getSize().getWidth()});
-        RobotLog.i("CameraFrame size: (" + cameraFrame.getSize().getWidth() + ", " + cameraFrame.getSize().getHeight() + "), Mat size: (" + cvFrame.size().width + ", " + cvFrame.size().height + ")");
+        Bitmap bmp = request.createEmptyBitmap();
+        cameraFrame.copyToBitmap(bmp);
+        Mat cvFrame = new Mat();
+        Bitmap bmp2 = bmp.copy(Bitmap.Config.RGB_565, false);
+        Utils.bitmapToMat(bmp2, cvFrame);
+        //moving this here for now
+        //if you see this I forgot to remove this
+        List<Mat> corners = new ArrayList<Mat>();
+        Mat ids = new Mat();
+        CameraHandler.detector.detectMarkers(cvFrame, corners, ids);
+        for (int i = 0; i < corners.size(); ++i) {
+            RobotLog.i("Drawing lines...");
+            Imgproc.line(cvFrame,
+                    new Point((int)corners.get(i).get(0, 0)[0], (int)corners.get(i).get(0, 1)[0]),
+                    new Point((int)corners.get(i).get(1, 0)[0], (int)corners.get(i).get(1, 1)[0]),
+                    new Scalar(0, 1, 0));
+            Imgproc.line(cvFrame,
+                    new Point((int)corners.get(i).get(1, 0)[0], (int)corners.get(i).get(1, 1)[0]),
+                    new Point((int)corners.get(i).get(2, 0)[0], (int)corners.get(i).get(2, 1)[0]),
+                    new Scalar(0, 1, 0));
+            Imgproc.line(cvFrame,
+                    new Point((int)corners.get(i).get(2, 0)[0], (int)corners.get(i).get(2, 1)[0]),
+                    new Point((int)corners.get(i).get(3, 0)[0], (int)corners.get(i).get(3, 1)[0]),
+                    new Scalar(0, 1, 0));
+            Imgproc.line(cvFrame,
+                    new Point((int)corners.get(i).get(3, 0)[0], (int)corners.get(i).get(3, 1)[0]),
+                    new Point((int)corners.get(i).get(0, 0)[0], (int)corners.get(i).get(0, 1)[0]),
+                    new Scalar(0, 1, 0));
+        }
+        //inefficient but useful for debugging
+        Utils.matToBitmap(cvFrame, this.lastBitmap);
         callback.accept(cvFrame);
     }
 

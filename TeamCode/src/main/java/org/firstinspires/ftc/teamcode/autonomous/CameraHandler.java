@@ -16,30 +16,25 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraCaptureReq
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraCaptureSequenceId;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraCaptureSession;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraException;
-import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraFrame;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraManager;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.internal.camera.CameraManagerInternal;
 import org.firstinspires.ftc.robotcore.internal.system.Deadline;
-import org.opencv.calib3d.Calib3d;
-import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfDouble;
 import org.opencv.core.MatOfFloat;
-import org.opencv.core.MatOfPoint2f;
-import org.opencv.core.MatOfPoint3f;
-import org.opencv.core.Point;
+import org.opencv.imgproc.Imgproc;
+import org.opencv.objdetect.ArucoDetector;
+import org.opencv.objdetect.DetectorParameters;
+import org.opencv.objdetect.Dictionary;
+import org.opencv.objdetect.Objdetect;
 
-import java.nio.ByteBuffer;
-import java.nio.FloatBuffer;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
-
-import edu.umich.eecs.april.apriltag.ApriltagDetection;
-import edu.umich.eecs.april.apriltag.ApriltagNative;
 
 /**
  * Static functions related to the camera.
@@ -48,6 +43,8 @@ public class CameraHandler {
     //Calibrated for Logitech C270 (see teamwebcamcalibrations.xml)
     public static Mat cameraMatrix;
     public static MatOfDouble distCoeffs;
+    //too lazy to recreate this multiple times
+    public static ArucoDetector detector = new ArucoDetector(Objdetect.getPredefinedDictionary(Objdetect.DICT_APRILTAG_36h11));
 
     static {
         RobotLog.i("Creating calibration matrices...");
@@ -172,19 +169,20 @@ public class CameraHandler {
 
     /**
      * Tries to determine the location of the robot from the given tag. Currently unable to utilise multiple tags.
-     * @param tag The tag.
+     * @param cornerSet The corners of the detection.
+     * @param id The id of the detection.
      * @return The location of the robot on the field, or null if it could not be determined.
      * **/
     @Nullable
-    private static FieldPos getLocationFromDetection(ApriltagDetection tag) {
-        RobotLog.d(String.format(Locale.UK, "Detection: ID %d, centre (%f, %f), corners [(%f, %f), (%f, %f), (%f, %f), (%f, %f)]", tag.id, tag.c[0], tag.c[1], tag.p[0], tag.p[1], tag.p[2], tag.p[3], tag.p[4], tag.p[5], tag.p[6], tag.p[7]));
-
+    private static FieldPos getLocationFromDetection(Mat cornerSet, int id) {
+        RobotLog.i(String.format(Locale.UK, "Detection: ID %d, corners [(%f, %f), (%f, %f), (%f, %f), (%f, %f)]", id, cornerSet.get(0, 0)[0], cornerSet.get(0, 1)[0], cornerSet.get(1, 0)[0], cornerSet.get(1, 1)[0], cornerSet.get(2, 0)[0], cornerSet.get(2, 1)[0], cornerSet.get(3, 0)[0], cornerSet.get(3, 1)[0]));
+        /*
         MatOfPoint3f objectPoints = new MatOfPoint3f();
-        MatOfPoint2f imageCorners = new MatOfPoint2f(new Point(tag.c[0], tag.c[1]), new Point(tag.c[2], tag.c[3]), new Point(tag.c[4], tag.c[5]), new Point(tag.c[6], tag.c[7]));
+        MatOfPoint2f imageCorners = new MatOfPoint2f(new Point(tag.p[0], tag.p[1]), new Point(tag.p[2], tag.p[3]), new Point(tag.p[4], tag.p[5]), new Point(tag.p[6], tag.p[7]));
 
         Mat rvec = new Mat(1, 3, CvType.CV_32F), tvec = new Mat(1, 3, CvType.CV_32F);
         boolean out = Calib3d.solvePnP(objectPoints, imageCorners, CameraHandler.cameraMatrix, CameraHandler.distCoeffs, rvec, tvec);
-
+        */
         return null;
     }
 
@@ -195,14 +193,13 @@ public class CameraHandler {
      * **/
     @Nullable
     public static FieldPos getLocationOnBoard(Mat frame) {
-        int length = (int)(frame.elemSize() * frame.total());
-        byte[] buffer = new byte[length];
-        frame.get(0, 0, buffer);
-        ArrayList<ApriltagDetection> tags = ApriltagNative.apriltag_detect_yuv(buffer, frame.cols(), frame.rows());
-        for (ApriltagDetection tag : tags) {
-            RobotLog.i("Found AprilTag with corners: (" + tag.c[0] + "," + tag.c[1] + "), (" + tag.c[0] + "," + tag.c[1] + "), (" + tag.c[0] + "," + tag.c[1] + "), (" + tag.c[0] + "," + tag.c[1] + ")");
-            //FieldPos position = getLocationFromDetection(tag);
-            //if (position != null) return position;
+        List<Mat> corners = new ArrayList<Mat>(0);
+        corners.add(new Mat());
+        Mat ids = new Mat();
+        CameraHandler.detector.detectMarkers(frame, corners, ids);
+        for (int i = 0; i < corners.size(); ++i) {
+            FieldPos position = getLocationFromDetection(corners.get(i), (int)ids.get(i, 0)[0]);
+            if (position != null) return position;
         }
         return null;
     }

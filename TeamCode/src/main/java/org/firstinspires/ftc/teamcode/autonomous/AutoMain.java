@@ -30,16 +30,11 @@ public class AutoMain extends LinearOpMode {
 
         AutoUtil.setOpMode(this);
 
-        RobotLog.i("Initialising AprilTags...");
-
-        //idk if these configs are right but let's pray...
-        ApriltagNative.apriltag_init("tag36h11", 0, 8, 0, 4);
-
         RobotLog.i("Initialising...");
 
         try {
             RobotLog.i("Creating callback...");
-            CameraFrameCallback callback = new CameraFrameCallback(CameraHandler::getLocationOnBoard);
+            CameraFrameCallback callback = new CameraFrameCallback((mat) -> {});
             RobotLog.i("Creating camera...");
             camera = CameraHandler.createCamera(this.hardwareMap, X_SIZE, Y_SIZE, callback);
             if (camera == null) throw new RuntimeException("Failed to open camera (check logs for details)");
