@@ -54,7 +54,10 @@ public class GlobalConstants {
     public static final GamepadInput CLAW_INTAKE_MODIFIER = GamepadInput.LEFT_TRIGGER;
     public static final GamepadInput CLAW_WRIST_MODIFIER = GamepadInput.RIGHT_TRIGGER;
 
-    public static final boolean CLAW_IS_INSTALLED = false;
+    public static final double ARM_ELBOW_TICK_MODIFIER = 100.0;
+    public static final double ARM_ELBOW_SPEED = 0.8;
+
+    public static final boolean CLAW_IS_INSTALLED = true;
 
     //Forward
     //Sideways

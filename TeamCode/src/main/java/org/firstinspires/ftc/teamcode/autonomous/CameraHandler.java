@@ -194,7 +194,6 @@ public class CameraHandler {
     @Nullable
     public static FieldPos getLocationOnBoard(Mat frame) {
         List<Mat> corners = new ArrayList<Mat>(0);
-        corners.add(new Mat());
         Mat ids = new Mat();
         CameraHandler.detector.detectMarkers(frame, corners, ids);
         for (int i = 0; i < corners.size(); ++i) {

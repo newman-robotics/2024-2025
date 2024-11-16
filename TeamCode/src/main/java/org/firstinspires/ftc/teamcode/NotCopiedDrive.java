@@ -48,7 +48,7 @@ public class NotCopiedDrive extends LinearOpMode {
             clawIntake = false;
         }
         //X ? Y : Z ==== if X is true then do Y, but if not do Z
-        this.hardware.setArmPowers(armElevation ? stick : 0, armElbow ? stick : 0);
+        this.hardware.setArmPowers(armElevation ? stick : 0, armElbow ? (int)(stick * GlobalConstants.ARM_ELBOW_TICK_MODIFIER) : 0);
         this.hardware.setClawPowers(clawWrist ? stick : 0, clawIntake ? stick : 0);
     }
 
@@ -58,8 +58,6 @@ public class NotCopiedDrive extends LinearOpMode {
         this.hardware = AutoUtil.Hardware.init(this.hardwareMap);
 
         this.waitForStart();
-
-        this.hardware.setClawWristAbsolutePosition(0);
 
         while (this.opModeIsActive()) {
             this.updateDrivetrain();

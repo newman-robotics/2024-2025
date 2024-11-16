@@ -78,8 +78,7 @@ public class AutoUtil {
 
         private final DcMotor frontLeft, frontRight, backLeft, backRight;
         private final DcMotor armElevation, armElbow;
-        private final Servo clawWrist;
-        private final CRServo clawIntake;
+        private final CRServo clawWrist, clawIntake;
 
         private Hardware(HardwareMap map) {
             this.frontLeft = map.get(DcMotor.class, GlobalConstants.FRONT_LEFT_MOTOR_NAME);
@@ -91,7 +90,7 @@ public class AutoUtil {
             this.armElbow = map.get(DcMotor.class, GlobalConstants.ARM_ELBOW_MOTOR_NAME);
 
             if (GlobalConstants.CLAW_IS_INSTALLED) {
-                this.clawWrist = map.get(Servo.class, GlobalConstants.CLAW_WRIST_MOTOR_NAME);
+                this.clawWrist = map.get(CRServo.class, GlobalConstants.CLAW_WRIST_MOTOR_NAME);
                 this.clawIntake = map.get(CRServo.class, GlobalConstants.CLAW_INTAKE_MOTOR_NAME);
             } else {
                 this.clawWrist = null;
@@ -109,6 +108,10 @@ public class AutoUtil {
 
             this.armElevation.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             this.armElbow.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+            this.armElbow.setPower(GlobalConstants.ARM_ELBOW_SPEED);
+            this.armElbow.setTargetPosition(0);
+            this.armElbow.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         }
 
         /**
@@ -143,7 +146,10 @@ public class AutoUtil {
             this.armElevation.setPower(0);
             this.armElbow.setPower(0);
 
-            if (GlobalConstants.CLAW_IS_INSTALLED) this.clawIntake.setPower(0);
+            if (GlobalConstants.CLAW_IS_INSTALLED) {
+                this.clawWrist.setPower(0);
+                this.clawIntake.setPower(0);
+            }
         }
 
         /**
@@ -163,28 +169,23 @@ public class AutoUtil {
         /**
          * Sets the powers for the arm. Also takes care of clamping.
          * @param elevation Elevation motor power.
-         * @param elbow Elbow motor power.
+         * @param elbow Elbow motor relative position.
          * **/
-        public void setArmPowers(double elevation, double elbow) {
+        public void setArmPowers(double elevation, int elbow) {
             this.armElevation.setPower(elevation);
-            this.armElbow.setPower(elbow);
+            this.armElbow.setTargetPosition(this.armElbow.getCurrentPosition() + elbow);
         }
 
         /**
          * Sets the powers for the claw. Also takes care of clamping.
-         * @param wrist Wrist motor relative position (i.e. relative to where it is now).
+         * @param wrist Wrist motor power.
          * @param intake Intake motor power.
          * **/
         public void setClawPowers(double wrist, double intake) {
             if (GlobalConstants.CLAW_IS_INSTALLED) {
-                this.clawWrist.setPosition(AutoUtil.clamp(this.clawWrist.getPosition() + wrist, 0, 1));
+                this.clawWrist.setPower(AutoUtil.clamp(wrist, 0, 1));
                 this.clawIntake.setPower(AutoUtil.clamp(intake, -1, 1));
             } else RobotLog.w("AutoUtil::Hardware::setClawPowers() called, but claw is not installed!");
-        }
-
-        public void setClawWristAbsolutePosition(double position) {
-            if (GlobalConstants.CLAW_IS_INSTALLED) this.clawWrist.setPosition(position);
-            else RobotLog.w("AutoUtil::Hardware::setClawWristAbsolutePosition() called, but claw is not installed!");
         }
     }
 

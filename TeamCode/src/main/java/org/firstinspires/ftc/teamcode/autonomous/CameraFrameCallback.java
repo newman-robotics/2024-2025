@@ -62,30 +62,6 @@ public class CameraFrameCallback implements CameraCaptureSession.CaptureCallback
         Mat cvFrame = new Mat();
         Bitmap bmp2 = bmp.copy(Bitmap.Config.RGB_565, false);
         Utils.bitmapToMat(bmp2, cvFrame);
-        //moving this here for now
-        //if you see this I forgot to remove this
-        List<Mat> corners = new ArrayList<Mat>();
-        Mat ids = new Mat();
-        CameraHandler.detector.detectMarkers(cvFrame, corners, ids);
-        for (int i = 0; i < corners.size(); ++i) {
-            RobotLog.i("Drawing lines...");
-            Imgproc.line(cvFrame,
-                    new Point((int)corners.get(i).get(0, 0)[0], (int)corners.get(i).get(0, 1)[0]),
-                    new Point((int)corners.get(i).get(1, 0)[0], (int)corners.get(i).get(1, 1)[0]),
-                    new Scalar(0, 1, 0));
-            Imgproc.line(cvFrame,
-                    new Point((int)corners.get(i).get(1, 0)[0], (int)corners.get(i).get(1, 1)[0]),
-                    new Point((int)corners.get(i).get(2, 0)[0], (int)corners.get(i).get(2, 1)[0]),
-                    new Scalar(0, 1, 0));
-            Imgproc.line(cvFrame,
-                    new Point((int)corners.get(i).get(2, 0)[0], (int)corners.get(i).get(2, 1)[0]),
-                    new Point((int)corners.get(i).get(3, 0)[0], (int)corners.get(i).get(3, 1)[0]),
-                    new Scalar(0, 1, 0));
-            Imgproc.line(cvFrame,
-                    new Point((int)corners.get(i).get(3, 0)[0], (int)corners.get(i).get(3, 1)[0]),
-                    new Point((int)corners.get(i).get(0, 0)[0], (int)corners.get(i).get(0, 1)[0]),
-                    new Scalar(0, 1, 0));
-        }
         //inefficient but useful for debugging
         Utils.matToBitmap(cvFrame, this.lastBitmap);
         callback.accept(cvFrame);
