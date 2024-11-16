@@ -14,8 +14,6 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraFrame;
 import org.firstinspires.ftc.robotcore.external.stream.CameraStreamServer;
 import org.opencv.core.Mat;
 
-import edu.umich.eecs.april.apriltag.ApriltagNative;
-
 @Autonomous(name="AutoMain")
 public class AutoMain extends LinearOpMode {
     public static int X_SIZE = 640;

@@ -35,8 +35,8 @@ public class GlobalConstants {
     public static final String ARM_VERTICAL_MOTOR_NAME = "actuator";
     public static final String ARM_ELBOW_MOTOR_NAME = "elbow";
 
-    public static final String CLAW_WRIST_MOTOR_NAME = "";
-    public static final String CLAW_INTAKE_MOTOR_NAME = "";
+    public static final String CLAW_WRIST_MOTOR_NAME = "wrist";
+    public static final String CLAW_INTAKE_MOTOR_NAME = "intake";
 
     public static final String WEBCAM_NAME = "webcam";
 

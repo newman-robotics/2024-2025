@@ -35,7 +35,6 @@ android {
 
 dependencies {
     implementation project(':FtcRobotController')
-    implementation project(path: ':AprilTags')
 
     compileOnly 'systems.manifold:manifold-preprocessor:2024.1.37'
     //annotationProcessor 'systems.manifold:manifold-preprocessor'
