@@ -21,13 +21,15 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.internal.camera.CameraManagerInternal;
 import org.firstinspires.ftc.robotcore.internal.system.Deadline;
+import org.opencv.calib3d.Calib3d;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfDouble;
 import org.opencv.core.MatOfFloat;
-import org.opencv.imgproc.Imgproc;
+import org.opencv.core.MatOfPoint2f;
+import org.opencv.core.MatOfPoint3f;
+import org.opencv.core.Point;
+import org.opencv.core.Point3;
 import org.opencv.objdetect.ArucoDetector;
-import org.opencv.objdetect.DetectorParameters;
-import org.opencv.objdetect.Dictionary;
 import org.opencv.objdetect.Objdetect;
 
 import java.util.ArrayList;
@@ -43,8 +45,35 @@ public class CameraHandler {
     //Calibrated for Logitech C270 (see teamwebcamcalibrations.xml)
     public static Mat cameraMatrix;
     public static MatOfDouble distCoeffs;
-    //too lazy to recreate this multiple times
-    public static ArucoDetector detector = new ArucoDetector(Objdetect.getPredefinedDictionary(Objdetect.DICT_APRILTAG_36h11));
+    public static final ArucoDetector detector = new ArucoDetector(Objdetect.getPredefinedDictionary(Objdetect.DICT_APRILTAG_36h11));
+
+    /**
+     * Creates the contours of an AprilTag at the given offset.
+     * @param offset The offset of the AprilTag along its wall, measured in inches to the centre of the AprilTag.
+     * @param isAlongXWall Whether the AprilTag is along a wall that increases in the X direction (i.e. if offset measures an X coordinate or a Z coordinate.)
+     * @param isAlongHighWall Whether the non-dominant coordinate (i.e. the one that offset does not measure) is 1.
+     * **/
+    private static MatOfPoint3f getContours(double offset, boolean isAlongXWall, boolean isAlongHighWall) {
+        double staticCoordinate = isAlongHighWall ? 1. : 0.;
+
+        Point3 first = new Point3(isAlongXWall ? offset - 2. : staticCoordinate, 6.25, isAlongXWall ? staticCoordinate : offset - 2.);
+        Point3 second = new Point3(isAlongXWall ? offset + 2. : staticCoordinate, 6.25, isAlongXWall ? staticCoordinate : offset + 2.);
+        Point3 third = new Point3(isAlongXWall ? offset + 2. : staticCoordinate, 2.25, isAlongXWall ? staticCoordinate : offset + 2.);
+        Point3 fourth = new Point3(isAlongXWall ? offset - 2. : staticCoordinate, 2.25, isAlongXWall ? staticCoordinate : offset - 2.);
+
+        return new MatOfPoint3f(first, second, third, fourth);
+    }
+
+    //NOTE: internally we use inches, but we convert to fields after (1 field = 144 inches)
+    //Format: 11 - 12 - 13 - 14 - 15 - 16
+    private static final MatOfPoint3f[] aprilTagWorldContours = {
+        CameraHandler.getContours(24., true, true),
+        CameraHandler.getContours(72., false, false),
+        CameraHandler.getContours(24., true, false),
+        CameraHandler.getContours(120., true, false),
+        CameraHandler.getContours(72., false, true),
+        CameraHandler.getContours(120., true, true),
+    };
 
     static {
         RobotLog.i("Creating calibration matrices...");
@@ -68,15 +97,18 @@ public class CameraHandler {
      * Therefore, (0, 0) is at the blue basket, (1, 0) is at
      * the red parking zone, (0, 1) is at the blue parking
      * zone, and (1, 1) is at the red basket.
+     * Additionally, 0 degrees is pointing from -X to +X.
      * Why is it like this? I don't know! I made it up!
      * **/
     public static class FieldPos {
         public final double x;
         public final double y;
+        public final double theta;
 
-        public FieldPos(double x, double y) {
+        public FieldPos(double x, double y, double theta) {
             this.x = x;
             this.y = y;
+            this.theta = theta;
         }
     }
 
@@ -168,6 +200,19 @@ public class CameraHandler {
     }
 
     /**
+     * Converts a Mat of 4 points to a MatOfPoint2f.
+     * @param cornerSet The set of corners of the object.
+     * @return A MatOfPoint2f representative of the original Mat's corners.
+     * **/
+    private static MatOfPoint2f convertCornerSet(Mat cornerSet) {
+        Point first = new Point(cornerSet.get(0, 0)[0], cornerSet.get(0, 1)[0]);
+        Point second = new Point(cornerSet.get(1, 0)[0], cornerSet.get(1, 1)[0]);
+        Point third = new Point(cornerSet.get(2, 0)[0], cornerSet.get(2, 1)[0]);
+        Point fourth = new Point(cornerSet.get(3, 0)[0], cornerSet.get(3, 1)[0]);
+        return new MatOfPoint2f(first, second, third, fourth);
+    }
+
+    /**
      * Tries to determine the location of the robot from the given tag. Currently unable to utilise multiple tags.
      * @param cornerSet The corners of the detection.
      * @param id The id of the detection.
@@ -176,13 +221,18 @@ public class CameraHandler {
     @Nullable
     private static FieldPos getLocationFromDetection(Mat cornerSet, int id) {
         RobotLog.i(String.format(Locale.UK, "Detection: ID %d, corners [(%f, %f), (%f, %f), (%f, %f), (%f, %f)]", id, cornerSet.get(0, 0)[0], cornerSet.get(0, 1)[0], cornerSet.get(1, 0)[0], cornerSet.get(1, 1)[0], cornerSet.get(2, 0)[0], cornerSet.get(2, 1)[0], cornerSet.get(3, 0)[0], cornerSet.get(3, 1)[0]));
-        /*
-        MatOfPoint3f objectPoints = new MatOfPoint3f();
-        MatOfPoint2f imageCorners = new MatOfPoint2f(new Point(tag.p[0], tag.p[1]), new Point(tag.p[2], tag.p[3]), new Point(tag.p[4], tag.p[5]), new Point(tag.p[6], tag.p[7]));
 
-        Mat rvec = new Mat(1, 3, CvType.CV_32F), tvec = new Mat(1, 3, CvType.CV_32F);
+        MatOfPoint3f objectPoints = CameraHandler.aprilTagWorldContours[id - 11];
+        MatOfPoint2f imageCorners = CameraHandler.convertCornerSet(cornerSet);
+
+        Mat rvec = new Mat(), tvec = new Mat();
         boolean out = Calib3d.solvePnP(objectPoints, imageCorners, CameraHandler.cameraMatrix, CameraHandler.distCoeffs, rvec, tvec);
-        */
+
+        if (!out) RobotLog.w("CameraHandler::getLocationFromDetection: solvePnP returned false. Results from here on out may be completely random...");
+        else RobotLog.w("CameraHandler::getLocationFromDetection: solvePnP returned true. I honestly don't know which is a good thing and which is a bad thing...");
+
+        //how to interpret rvec and tvec?
+
         return null;
     }
 
