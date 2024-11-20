@@ -78,6 +78,8 @@ public class AutoUtil {
         private final CRServo clawIntake;
         private final Servo clawWrist;
 
+        private final Servo newArm;
+
         private Hardware(HardwareMap map) {
             this.frontLeft = map.get(DcMotor.class, GlobalConstants.FRONT_LEFT_MOTOR_NAME);
             this.frontRight = map.get(DcMotor.class, GlobalConstants.FRONT_RIGHT_MOTOR_NAME);
@@ -86,6 +88,7 @@ public class AutoUtil {
 
             this.armElevation = map.get(DcMotor.class, GlobalConstants.ARM_VERTICAL_MOTOR_NAME);
             this.armElbow = map.get(DcMotor.class, GlobalConstants.ARM_ELBOW_MOTOR_NAME);
+            this.newArm = map.get(Servo.class, GlobalConstants.NEW_ARM_MAYBE_NAME);
 
             if (GlobalConstants.CLAW_IS_INSTALLED) {
                 this.clawWrist = map.get(Servo.class, GlobalConstants.CLAW_WRIST_MOTOR_NAME);
@@ -149,6 +152,11 @@ public class AutoUtil {
             }
         }
 
+        public void break_arm_claw(){
+            this.armElbow.setTargetPosition(this.armElbow.getCurrentPosition());
+            this.clawWrist.setPosition(this.clawWrist.getPosition());
+        }
+
         /**
          * Sets the powers for the drivetrain. Also takes care of clamping.
          * @param frontLeft Front left motor power.
@@ -183,6 +191,15 @@ public class AutoUtil {
                 this.clawWrist.setPosition(this.clawWrist.getPosition() + wrist);
                 this.clawIntake.setPower(AutoUtil.clamp(intake, -1, 1));
             } else RobotLog.w("AutoUtil::Hardware::setClawPowers() called, but claw is not installed!");
+        }
+
+        /**
+         * Sets the power for the three new arm servos
+         * **/
+
+        public void setNewArmPowers(double armone, double armtwo, double armthree){
+            this.newArm.setPosition(this.newArm.getPosition() + armone);
+
         }
     }
 

@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.autonomous.AutoUtil;
 import org.firstinspires.ftc.teamcode.autonomous.GlobalConstants;
+import org.firstinspires.ftc.teamcode.arm2;
 
 //Whatever the name is will appear in the driver hub select display
 @TeleOp(name="Modus Operandi")

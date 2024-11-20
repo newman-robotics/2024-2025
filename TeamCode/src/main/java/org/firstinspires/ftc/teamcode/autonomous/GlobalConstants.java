@@ -38,6 +38,8 @@ public class GlobalConstants {
     public static final String CLAW_WRIST_MOTOR_NAME = "wrist";
     public static final String CLAW_INTAKE_MOTOR_NAME = "intake";
 
+    public static final String NEW_ARM_MAYBE_NAME = "";
+
     public static final String WEBCAM_NAME = "webcam";
 
     public static final double GAMEPAD_THRESHOLD = 0.7;
