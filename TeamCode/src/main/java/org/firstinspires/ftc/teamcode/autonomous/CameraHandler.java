@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.android.util.Size;
 import org.firstinspires.ftc.robotcore.external.function.Continuation;
 import org.firstinspires.ftc.robotcore.external.function.ContinuationResult;
@@ -48,6 +49,7 @@ import java.util.function.Consumer;
 
 /**
  * Static functions related to the camera.
+ * Basically AutoUtil if AutoUtil included camera code.
  * **/
 public class CameraHandler {
     //Calibrated for Logitech C270 (see teamwebcamcalibrations.xml)
@@ -83,6 +85,8 @@ public class CameraHandler {
         CameraHandler.getContours(120., true, true),
     };
 
+    private static final MatOfPoint3f aprilTagOriginContours = CameraHandler.getContours(0., true, false);
+
     static {
         RobotLog.i("Creating calibration matrices...");
 
@@ -117,6 +121,15 @@ public class CameraHandler {
             this.x = x;
             this.y = y;
             this.theta = theta;
+        }
+
+        @Override
+        public String toString() {
+            return "FieldPos{" +
+                    "x=" + x +
+                    ", y=" + y +
+                    ", theta=" + theta +
+                    '}';
         }
     }
 
@@ -284,17 +297,31 @@ public class CameraHandler {
      * **/
     @Nullable
     private static FieldPos getLocationFromDetection(Mat cornerSet, int id) {
-        RobotLog.i(String.format(Locale.UK, "Detection: ID %d, corners [(%f, %f), (%f, %f), (%f, %f), (%f, %f)]", id, cornerSet.get(0, 0)[0], cornerSet.get(0, 1)[0], cornerSet.get(1, 0)[0], cornerSet.get(1, 1)[0], cornerSet.get(2, 0)[0], cornerSet.get(2, 1)[0], cornerSet.get(3, 0)[0], cornerSet.get(3, 1)[0]));
-
-        MatOfPoint3f objectPoints = CameraHandler.aprilTagWorldContours[id - 11];
+        //MatOfPoint3f objectPoints = CameraHandler.aprilTagWorldContours[id - 11];
         MatOfPoint2f imageCorners = CameraHandler.convertCornerSet(cornerSet);
 
         Mat rvec = new Mat(), tvec = new Mat();
-        boolean out = Calib3d.solvePnP(objectPoints, imageCorners, CameraHandler.cameraMatrix, CameraHandler.distCoeffs, rvec, tvec);
+        boolean out = Calib3d.solvePnP(CameraHandler.aprilTagOriginContours, imageCorners, CameraHandler.cameraMatrix, CameraHandler.distCoeffs, rvec, tvec);
 
-        if (!out) RobotLog.w("CameraHandler::getLocationFromDetection: solvePnP returned false. Results from here on out may be completely random...");
-        else RobotLog.w("CameraHandler::getLocationFromDetection: solvePnP returned true. I honestly don't know which is a good thing and which is a bad thing...");
+        if (!out) {
+            RobotLog.e("CameraHandler::getLocationFromDetection: solvePnP failed!");
+            return null;
+        }
 
+        Telemetry telemetry = AutoUtil.getOpMode().telemetry;
+
+        telemetry.addData("Detection ID: ", id);
+        telemetry.addData("Relative X: ", tvec.get(0, 0)[0]);
+        telemetry.addData("Relative Y: ", tvec.get(1, 0)[0]);
+        telemetry.addData("Relative Z: ", tvec.get(2, 0)[0]);
+        telemetry.addData("Relative Yaw:   ", rvec.get(0, 0)[0]);
+        telemetry.addData("Relative Pitch: ", rvec.get(1, 0)[0]);
+        telemetry.addData("Relative Roll:  ", rvec.get(2, 0)[0]);
+        telemetry.update();
+
+        return null;
+
+        /*
         Mat rmat = new Mat();
         Calib3d.Rodrigues(rvec, rmat);
         Mat inversermat = new Mat();
@@ -306,7 +333,20 @@ public class CameraHandler {
         Mat cameraPos = new Mat();
         Core.multiply(inversermat, inversetvec, cameraPos);
 
-        return null;
+        double x = cameraPos.get(1, 1)[0] / 144.;
+        //I think OpenCV orders coordinates XZY so this might be wrong...
+        //...then again OpenCV doesn't really care, I don't think
+        double y = cameraPos.get(3, 1)[0] / 144.;
+        //I think rvec is [yaw, pitch, roll]...
+        double theta = rvec.get(1, 1)[0];
+
+        FieldPos ret = new FieldPos(x, y, theta);
+
+        AutoUtil.getOpMode().telemetry.addData("Position: ", ret);
+        AutoUtil.getOpMode().telemetry.update();
+
+        return ret;
+        */
     }
 
     /**

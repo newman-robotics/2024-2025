@@ -18,12 +18,11 @@ public class AutoMain extends LinearOpMode {
      * **/
     @Override
     public void runOpMode() throws InterruptedException {
-        Camera camera;
-
         AutoUtil.setOpMode(this);
 
         RobotLog.i("Initialising...");
 
+        Camera camera;
         try {
             RobotLog.i("Creating callback...");
             CameraHandler.CameraFrameCallback callback = new CameraHandler.CameraFrameCallback(CameraHandler::getLocationOnBoard);
