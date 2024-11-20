@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.autonomous;
 
+import android.graphics.Bitmap;
 import android.graphics.ImageFormat;
 
 import androidx.annotation.NonNull;
@@ -11,16 +12,20 @@ import com.qualcomm.robotcore.util.RobotLog;
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.android.util.Size;
 import org.firstinspires.ftc.robotcore.external.function.Continuation;
+import org.firstinspires.ftc.robotcore.external.function.ContinuationResult;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.Camera;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraCaptureRequest;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraCaptureSequenceId;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraCaptureSession;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraException;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraFrame;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraManager;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.stream.CameraStreamSource;
 import org.firstinspires.ftc.robotcore.internal.camera.CameraManagerInternal;
 import org.firstinspires.ftc.robotcore.internal.system.Deadline;
+import org.opencv.android.Utils;
 import org.opencv.calib3d.Calib3d;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
@@ -39,6 +44,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 /**
  * Static functions related to the camera.
@@ -111,6 +117,62 @@ public class CameraHandler {
             this.x = x;
             this.y = y;
             this.theta = theta;
+        }
+    }
+
+    /**
+     * A wrapper for a frame callback. Handles streaming to the DS and conversion to OpenCV types.
+     * **/
+    public static class CameraFrameCallback implements CameraCaptureSession.CaptureCallback {
+        private final Consumer<Mat> callback;
+        private Bitmap lastBitmap;
+
+        /**
+         * Creates a camera frame callback from the given consumer.
+         * @param callback The consumer to be called on every frame. (The frame is RGB.)
+         * **/
+        public CameraFrameCallback(Consumer<Mat> callback) {
+            this.callback = callback;
+            RobotLog.i("Constructed CameraFrameCallback...");
+        }
+
+        /**
+         * Override function. Don't call this from your own code.
+         * **/
+        @Override
+        public void onNewFrame(@NonNull CameraCaptureSession session, @NonNull CameraCaptureRequest request, @NonNull CameraFrame cameraFrame) {
+            if (cameraFrame.getFrameNumber() % 10 == 0) RobotLog.i("CameraFrameCallback::onNewFrame(" + cameraFrame.getFrameNumber() + ")...");
+
+            byte[] rawData = cameraFrame.getImageData();
+            if (rawData.length == 0) {
+                RobotLog.e("Failed to find camera frame image data!");
+                this.lastBitmap = null;
+                return;
+            }
+
+            this.lastBitmap = request.createEmptyBitmap();
+            Bitmap bmp = request.createEmptyBitmap();
+            cameraFrame.copyToBitmap(bmp);
+            Mat cvFrame = new Mat();
+            Bitmap bmp2 = bmp.copy(Bitmap.Config.RGB_565, false);
+            Utils.bitmapToMat(bmp2, cvFrame);
+            //inefficient but useful for debugging
+            Utils.matToBitmap(cvFrame, this.lastBitmap);
+            callback.accept(cvFrame);
+        }
+
+        /**
+         * Creates and returns a CameraStreamSource.
+         * @return A CameraStreamSource that can be uploaded to the CameraStreamServer.
+         * **/
+        public CameraStreamSource getCameraStreamSource() {
+            return continuation -> continuation.dispatch(new ContinuationResult<org.firstinspires.ftc.robotcore.external.function.Consumer<Bitmap>>() {
+                @Override
+                public void handle(org.firstinspires.ftc.robotcore.external.function.Consumer<Bitmap> bitmapConsumer) {
+                    if (CameraFrameCallback.this.lastBitmap == null) RobotLog.e("Attempting to send null bitmap!");
+                    else bitmapConsumer.accept(CameraFrameCallback.this.lastBitmap);
+                }
+            });
         }
     }
 

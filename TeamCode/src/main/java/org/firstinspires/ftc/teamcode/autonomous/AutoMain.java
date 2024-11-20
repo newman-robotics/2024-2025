@@ -26,7 +26,7 @@ public class AutoMain extends LinearOpMode {
 
         try {
             RobotLog.i("Creating callback...");
-            CameraFrameCallback callback = new CameraFrameCallback(CameraHandler::getLocationOnBoard);
+            CameraHandler.CameraFrameCallback callback = new CameraHandler.CameraFrameCallback(CameraHandler::getLocationOnBoard);
             RobotLog.i("Creating camera...");
             camera = CameraHandler.createCamera(this.hardwareMap, X_SIZE, Y_SIZE, callback);
             if (camera == null) throw new RuntimeException("Failed to open camera (check logs for details)");
