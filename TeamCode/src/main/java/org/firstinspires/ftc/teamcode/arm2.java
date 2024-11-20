@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import org.firstinspires.ftc.teamcode.autonomous.AutoUtil;
 import org.firstinspires.ftc.teamcode.autonomous.GlobalConstants;
 
-
+@teleop(name = "arm2")
 public class arm2 extends LinearOpMode {
 
 
@@ -27,9 +27,13 @@ public class arm2 extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         AutoUtil.setOpMode(this);
 
-        rope_tightener = hardwareMap.get(CRServo.class, "rope_tightener");
-        rope_tightener = hardwareMap.get(CRServo.class, "rope_tightener2");
-        upy_downly = hardwareMap.get(CRServo.class, "Rope_Upy_downy");
+        //Servo 1:  rope_tightener   == intake
+        //Servo 2:  rope_tightener2  == wrist
+        //Servo 3:` upy_downly       == arm_p1
+        //Servo 4:  grippy           == Rope_arm
+        rope_tightener = hardwareMap.get(CRServo.class, "intake");
+        rope_tightener = hardwareMap.get(CRServo.class, "wrist");
+        upy_downly = hardwareMap.get(CRServo.class, "arm_p1");
         grippy = hardwareMap.get(CRServo.class, "Rope_arm)");
 
 
