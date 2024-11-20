@@ -2,14 +2,16 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
+
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 
 import org.firstinspires.ftc.teamcode.autonomous.AutoUtil;
 import org.firstinspires.ftc.teamcode.autonomous.GlobalConstants;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-
+@TeleOp(name="arm2", group="Linear OpMode")
 public class arm2 extends LinearOpMode {
 
 
@@ -22,13 +24,11 @@ public class arm2 extends LinearOpMode {
 
 
 
-
-    @Override
     public void runOpMode() throws InterruptedException {
         AutoUtil.setOpMode(this);
 
         rope_tightener = hardwareMap.get(CRServo.class, "rope_tightener");
-        rope_tightener = hardwareMap.get(CRServo.class, "rope_tightener2");
+        rope_tightener2 = hardwareMap.get(CRServo.class, "rope_tightener2");
         upy_downly = hardwareMap.get(CRServo.class, "Rope_Upy_downy");
         grippy = hardwareMap.get(CRServo.class, "Rope_arm)");
 
@@ -57,7 +57,7 @@ public class arm2 extends LinearOpMode {
             rope_tightener.setDirection(DcMotorSimple.Direction.FORWARD);
 
 
-            Double input_detector_for_upydowny = AutoUtil.ternaryXOR(
+            double input_detector_for_upydowny = AutoUtil.ternaryXOR(
                     AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.GamepadInput.LEFT_TRIGGER)
 
                     ,AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.GamepadInput.RIGHT_TRIGGER)
@@ -67,6 +67,7 @@ public class arm2 extends LinearOpMode {
             //inputs and stuff
             if (input_detector_for_upydowny == 1) {
                 upy_downly.setPower(.5);
+
             }
 
 
@@ -86,18 +87,13 @@ public class arm2 extends LinearOpMode {
 
             if (AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.GamepadInput.RIGHT_BUMPER)){
                 rope_tightener.setPower(.5);
+                rope_tightener2.setPower(.5);
             }
             else {
                 rope_tightener.setPower(-.5);
+                rope_tightener2.setPower(.5);
             }
         }
-
-
-
-
-
-
-
 
 
     }
