@@ -52,6 +52,9 @@ public class GlobalConstants {
     public static final String CLAW_WRIST_MOTOR_NAME = "wrist";
     public static final String CLAW_INTAKE_MOTOR_NAME = "intake";
 
+    public static final String CLAW2_FIRST_MOTOR_NAME = "wrist";
+    public static final String CLAW2_SECOND_MOTOR_NAME = "intake";
+
     //this has no use currently but if we make a new arm UPDATE THIS COMMENT
     public static final String NEW_ARM_MAYBE_NAME = "";
 

@@ -267,10 +267,24 @@ public class CameraHandler {
      * @return A MatOfPoint2f representative of the original Mat's corners.
      * **/
     private static MatOfPoint2f convertCornerSet(Mat cornerSet) {
-        Point first = new Point(cornerSet.get(0, 0)[0], cornerSet.get(0, 1)[0]);
-        Point second = new Point(cornerSet.get(1, 0)[0], cornerSet.get(1, 1)[0]);
-        Point third = new Point(cornerSet.get(2, 0)[0], cornerSet.get(2, 1)[0]);
-        Point fourth = new Point(cornerSet.get(3, 0)[0], cornerSet.get(3, 1)[0]);
+        RobotLog.i("CameraHandler.convertCornerSet: cornerSet = " + cornerSet);
+
+        double firstx = cornerSet.get(0, 0)[0];
+        double firsty = cornerSet.get(0, 1)[0];
+        Point first = new Point(firstx, firsty);
+
+        double secondx = cornerSet.get(1, 0)[0];
+        double secondy = cornerSet.get(1, 1)[0];
+        Point second = new Point(secondx, secondy);
+
+        double thirdx = cornerSet.get(2, 0)[0];
+        double thirdy = cornerSet.get(2, 1)[0];
+        Point third = new Point(thirdx, thirdy);
+
+        double fourthx = cornerSet.get(3, 0)[0];
+        double fourthy = cornerSet.get(3, 1)[0];
+        Point fourth = new Point(fourthx, fourthy);
+
         return new MatOfPoint2f(first, second, third, fourth);
     }
 

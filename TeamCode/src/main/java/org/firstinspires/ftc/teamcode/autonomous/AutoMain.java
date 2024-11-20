@@ -19,6 +19,7 @@ public class AutoMain extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         AutoUtil.setOpMode(this);
+        AutoUtil.ChainTelemetry.init(this.telemetry);
 
         RobotLog.i("Initialising...");
 

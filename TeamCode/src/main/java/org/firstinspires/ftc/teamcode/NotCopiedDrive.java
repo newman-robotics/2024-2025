@@ -50,7 +50,7 @@ public class NotCopiedDrive extends LinearOpMode {
     @Override
     public void runOpMode() {
         AutoUtil.setOpMode(this);
-        try {this.hardware = AutoUtil.Hardware.get();} catch (IllegalAccessException e) {throw new RuntimeException(e);}
+        this.hardware = AutoUtil.Hardware.init(this.hardwareMap);
 
         this.waitForStart();
 
