@@ -16,7 +16,6 @@ import org.firstinspires.ftc.robotcore.external.function.Continuation;
 import org.firstinspires.ftc.robotcore.external.function.ContinuationResult;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.Camera;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraCaptureRequest;
-import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraCaptureSequenceId;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraCaptureSession;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraException;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraFrame;
@@ -28,8 +27,6 @@ import org.firstinspires.ftc.robotcore.internal.camera.CameraManagerInternal;
 import org.firstinspires.ftc.robotcore.internal.system.Deadline;
 import org.opencv.android.Utils;
 import org.opencv.calib3d.Calib3d;
-import org.opencv.core.Core;
-import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfDouble;
 import org.opencv.core.MatOfFloat;
@@ -42,7 +39,6 @@ import org.opencv.objdetect.Objdetect;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -179,12 +175,9 @@ public class CameraHandler {
          * @return A CameraStreamSource that can be uploaded to the CameraStreamServer.
          * **/
         public CameraStreamSource getCameraStreamSource() {
-            return continuation -> continuation.dispatch(new ContinuationResult<org.firstinspires.ftc.robotcore.external.function.Consumer<Bitmap>>() {
-                @Override
-                public void handle(org.firstinspires.ftc.robotcore.external.function.Consumer<Bitmap> bitmapConsumer) {
-                    if (CameraFrameCallback.this.lastBitmap == null) RobotLog.e("Attempting to send null bitmap!");
-                    else bitmapConsumer.accept(CameraFrameCallback.this.lastBitmap);
-                }
+            return continuation -> continuation.dispatch((ContinuationResult<org.firstinspires.ftc.robotcore.external.function.Consumer<Bitmap>>) bitmapConsumer -> {
+                if (CameraFrameCallback.this.lastBitmap == null) RobotLog.e("Attempting to send null bitmap!");
+                else bitmapConsumer.accept(CameraFrameCallback.this.lastBitmap);
             });
         }
     }
@@ -209,7 +202,7 @@ public class CameraHandler {
         RobotLog.i("Getting WebcamName...");
         WebcamName name = map.get(WebcamName.class, GlobalConstants.WEBCAM_NAME);
         AutoUtil.Counter cameraCreated = new AutoUtil.Counter(1);
-        AutoUtil.Value<Camera> cameraWrapper = new AutoUtil.Value<Camera>();
+        AutoUtil.Value<Camera> cameraWrapper = new AutoUtil.Value<>();
         RobotLog.i("Opening camera...");
         cameraManager.requestPermissionAndOpenCamera(new Deadline(5000, TimeUnit.MILLISECONDS), name, Continuation.create(serialThreadPool, new Camera.StateCallback() {
             @Override public void onOpened(@NonNull Camera camera) {
@@ -243,20 +236,12 @@ public class CameraHandler {
 
                         RobotLog.i("About to call session.startCapture(): session = " + session + ", request = " + request);
 
-                        session.startCapture(request, frameCallback, Continuation.create(serialThreadPool, new CameraCaptureSession.StatusCallback() {
-                            @Override
-                            public void onCaptureSequenceCompleted(@NonNull CameraCaptureSession session, CameraCaptureSequenceId cameraCaptureSequenceId, long lastFrameNumber) {
-                                RobotLog.i("Camera capture sequence completed with " + lastFrameNumber + " frames");
-                            }
-                        }));
+                        session.startCapture(request, frameCallback, Continuation.create(serialThreadPool, (session1, cameraCaptureSequenceId, lastFrameNumber) -> RobotLog.i("Camera capture sequence completed with " + lastFrameNumber + " frames")));
                         cameraOpened.decrement();
                     } catch (CameraException e) {
                         session.close();
                         RobotLog.e("Exception occurred while configuring camera: " + e);
                         throw new RuntimeException(e);
-                    } catch (NullPointerException e) {
-                        e.printStackTrace();
-                        throw e;
                     }
                 }
 
@@ -308,16 +293,13 @@ public class CameraHandler {
             return null;
         }
 
-        Telemetry telemetry = AutoUtil.getOpMode().telemetry;
-
-        telemetry.addData("Detection ID: ", id);
-        telemetry.addData("Relative X: ", tvec.get(0, 0)[0]);
-        telemetry.addData("Relative Y: ", tvec.get(1, 0)[0]);
-        telemetry.addData("Relative Z: ", tvec.get(2, 0)[0]);
-        telemetry.addData("Relative Yaw:   ", rvec.get(0, 0)[0]);
-        telemetry.addData("Relative Pitch: ", rvec.get(1, 0)[0]);
-        telemetry.addData("Relative Roll:  ", rvec.get(2, 0)[0]);
-        telemetry.update();
+        AutoUtil.ChainTelemetry telemetry = null;
+        try {telemetry = AutoUtil.ChainTelemetry.get();} catch (IllegalAccessException e) {throw new RuntimeException(e);}
+        telemetry.add("Data in inches and (probably) radians.")
+            .add("Detection ID: ", id)
+            .add("Relative X: ", tvec.get(0, 0)[0]).add("Relative Y: ", tvec.get(1, 0)[0]).add("Relative Z: ", tvec.get(2, 0)[0])
+            .add("Relative Yaw:   ", rvec.get(0, 0)[0]).add("Relative Pitch: ", rvec.get(1, 0)[0]).add("Relative Roll:  ", rvec.get(2, 0)[0])
+            .update();
 
         return null;
 
@@ -356,7 +338,7 @@ public class CameraHandler {
      * **/
     @Nullable
     public static FieldPos getLocationOnBoard(Mat frame) {
-        List<Mat> corners = new ArrayList<Mat>(0);
+        List<Mat> corners = new ArrayList<>(0);
         Mat ids = new Mat();
         CameraHandler.detector.detectMarkers(frame, corners, ids);
         for (int i = 0; i < corners.size(); ++i) {

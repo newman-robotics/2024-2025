@@ -57,23 +57,14 @@ public class arm2 extends LinearOpMode {
             rope_tightener.setDirection(DcMotorSimple.Direction.FORWARD);
 
 
-            Double input_detector_for_upydowny = AutoUtil.ternaryXOR(
+            double input_detector_for_upydowny = AutoUtil.ternaryXOR(
                     AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.GamepadInput.LEFT_TRIGGER)
 
                     ,AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.GamepadInput.RIGHT_TRIGGER)
 
             );
 
-            //inputs and stuff
-            if (input_detector_for_upydowny == 1) {
-                upy_downly.setPower(.5);
-            }
-
-
-            if (input_detector_for_upydowny == -1) {
-
-                upy_downly.setPower(-.5);
-            }
+            upy_downly.setPower(input_detector_for_upydowny / 2.);
 
 
 

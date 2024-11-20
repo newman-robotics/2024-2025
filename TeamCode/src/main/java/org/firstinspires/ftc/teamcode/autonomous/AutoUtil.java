@@ -10,6 +10,9 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.RobotLog;
 
+import org.firstinspires.ftc.robotcore.external.Func;
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+
 /**
  * Various static functions.
  * (When I say various, I mean there's a little bit of everything in here.)
@@ -66,6 +69,97 @@ public class AutoUtil {
     }
 
     /**
+     * Allows for easier addition of telemetry via function chaining. Singleton class.
+     * **/
+    public static class ChainTelemetry {
+        private static ChainTelemetry instance;
+
+        private final Telemetry telemetry;
+
+        private ChainTelemetry(Telemetry telemetry) {this.telemetry = telemetry;}
+
+        /**
+         * Constructs and returns the chain telemetry.
+         * @param telemetry The telemetry of the invoking OpMode.
+         * @return ChainTelemetry.
+         * @see AutoUtil#setOpMode(LinearOpMode) AutoUtil.setOpMode(LinearOpMode)
+         * **/
+        public static ChainTelemetry init(Telemetry telemetry) {
+            ChainTelemetry.instance = new ChainTelemetry(telemetry);
+            return ChainTelemetry.instance;
+        }
+
+        /**
+         * Gets the ChainTelemetry.
+         * @return ChainTelemetry.
+         * @throws IllegalAccessException Throws if the ChainTelemetry instance has not been initialised.
+         * **/
+        public static ChainTelemetry get() throws IllegalAccessException {
+            if (ChainTelemetry.instance == null) throw new IllegalAccessException("ChainTelemetry requested, but not initialised!");
+            return ChainTelemetry.instance;
+        }
+
+        public Telemetry getTelemetry() {
+            return telemetry;
+        }
+
+        /**
+         * See {@link Telemetry#addLine(String) Telemetry.addLine(String)}.
+         * **/
+        public ChainTelemetry add(String caption) {
+            this.telemetry.addLine(caption);
+            return this;
+        }
+
+        /**
+         * See {@link Telemetry#addData(String, Object) Telemetry.addData(String, Object)}.
+         * **/
+        public ChainTelemetry add(String caption, Object object) {
+            this.telemetry.addData(caption, object);
+            return this;
+        }
+
+        /**
+         * See {@link Telemetry#addData(String, Func) Telemetry.addData(String, Func)}.
+         * **/
+        public <T> ChainTelemetry add(String caption, Func<T> producer) {
+            this.telemetry.addData(caption, producer);
+            return this;
+        }
+
+        /**
+         * See {@link Telemetry#addData(String, String, Object...) Telemetry.addData(String, String, Object...)}.
+         * **/
+        public ChainTelemetry add(String caption, String format, Object... args) {
+            this.telemetry.addData(caption, format, args);
+            return this;
+        }
+
+        /**
+         * See {@link Telemetry#addData(String, String, Func) Telemetry.addData(String, String, Func)}.
+         * **/
+        public <T> ChainTelemetry add(String caption, String format, Func<T> producer) {
+            this.telemetry.addData(caption, format, producer);
+            return this;
+        }
+
+        /**
+         * See {@link Telemetry#addLine() Telemetry.addLine()}.
+         * **/
+        public ChainTelemetry addLine() {
+            this.telemetry.addLine();
+            return this;
+        }
+
+        /**
+         * See {@link Telemetry#update() Telemetry.update()}.
+         * **/
+        public void update() {
+            this.telemetry.update();
+        }
+    }
+
+    /**
      * The entire hardware for the robot. Singleton class.
      * Why is this in AutoUtil and not its own dedicated class, I hear you ask?
      * I have no clue.
@@ -116,6 +210,7 @@ public class AutoUtil {
          * Constructs and returns the hardware.
          * @param map The hardware map of the invoking OpMode.
          * @return Hardware.
+         * @see AutoUtil#setOpMode(LinearOpMode) AutoUtil.setOpMode(LinearOpMode)
          * **/
         public static Hardware init(HardwareMap map) {
             Hardware.instance = new Hardware(map);
@@ -147,11 +242,6 @@ public class AutoUtil {
             if (GlobalConstants.CLAW_IS_INSTALLED) {
                 this.clawIntake.setPower(0);
             }
-        }
-
-        public void break_arm_claw(){
-            this.armElbow.setTargetPosition(this.armElbow.getCurrentPosition());
-            this.clawWrist.setPosition(this.clawWrist.getPosition());
         }
 
         /**
@@ -197,12 +287,15 @@ public class AutoUtil {
     private static LinearOpMode opMode = null;
 
     /**
-     * Sets the currently running OpMode.
+     * Sets the currently running OpMode, and initialises AutoUtil's member singletons.
      * This is useful for throwing exceptions if the OpMode is stopped early.
      * @param opMode The opMode to set. Must be linear because iterative OpModes apparently don't work that way.
      * **/
     public static void setOpMode(LinearOpMode opMode) {
+        if (AutoUtil.opMode != null) throw new IllegalArgumentException("It is illegal to call AutoUtil.setOpMode more than once!");
         AutoUtil.opMode = opMode;
+        AutoUtil.Hardware.init(opMode.hardwareMap);
+        AutoUtil.ChainTelemetry.init(opMode.telemetry);
     }
 
     /**
