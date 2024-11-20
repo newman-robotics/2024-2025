@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
@@ -9,7 +10,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import org.firstinspires.ftc.teamcode.autonomous.AutoUtil;
 import org.firstinspires.ftc.teamcode.autonomous.GlobalConstants;
 
-@teleop(name = "arm2")
+@TeleOp(name = "arm2")
 public class arm2 extends LinearOpMode {
 
 
@@ -27,12 +28,12 @@ public class arm2 extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         AutoUtil.setOpMode(this);
 
-        //Servo 1:  rope_tightener   == intake
-        //Servo 2:  rope_tightener2  == wrist
-        //Servo 3:` upy_downly       == arm_p1
-        //Servo 4:  grippy           == Rope_arm
-        rope_tightener = hardwareMap.get(CRServo.class, "intake");
-        rope_tightener = hardwareMap.get(CRServo.class, "wrist");
+        //Servo 0:  rope_tightener   == intake
+        //Servo 1:  rope_tightener2  == wrist
+        //Servo 2:` upy_downly       == arm_p1
+        //Servo 3:  grippy           == Rope_arm
+        rope_tightener = hardwareMap.get(CRServo.class, GlobalConstants.CLAW2_FIRST_MOTOR_NAME);
+        rope_tightener2 = hardwareMap.get(CRServo.class, GlobalConstants.CLAW2_SECOND_MOTOR_NAME);
         upy_downly = hardwareMap.get(CRServo.class, "arm_p1");
         grippy = hardwareMap.get(CRServo.class, "Rope_arm)");
 
@@ -51,40 +52,24 @@ public class arm2 extends LinearOpMode {
             float fason = gamepad1.left_trigger;
             float fason2 = gamepad1.right_trigger;
 
-
-
-            // setter we will see what happens
-            upy_downly.setDirection(DcMotorSimple.Direction.FORWARD);
-
-            grippy.setDirection(DcMotorSimple.Direction.FORWARD);
-
-            rope_tightener.setDirection(DcMotorSimple.Direction.FORWARD);
-
-
             double input_detector_for_upydowny = AutoUtil.ternaryXOR(
-                    AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.GamepadInput.LEFT_TRIGGER)
-
-                    ,AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.GamepadInput.RIGHT_TRIGGER)
-
+                    AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.GamepadInput.LEFT_TRIGGER),
+                    AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.GamepadInput.RIGHT_TRIGGER)
             );
+            upy_downly.setPower(input_detector_for_upydowny);
 
-            upy_downly.setPower(input_detector_for_upydowny / 2.);
+            double input_detector_for_grippy = AutoUtil.ternaryXOR(
+                    AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.GamepadInput.BUTTON_A),
+                    AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.GamepadInput.BUTTON_B)
+            );
+            grippy.setPower(input_detector_for_grippy);
 
-
-
-            if (AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.GamepadInput.LEFT_BUMPER)) {
-                grippy.setPower(-.5);
-            }
-            else{
-                grippy.setPower(.5);
-            }
-
-            if (AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.GamepadInput.RIGHT_BUMPER)){
-                rope_tightener.setPower(.5);
-            }
-            else {
-                rope_tightener.setPower(-.5);
-            }
+            double input_detector_for_rope_tightener = AutoUtil.ternaryXOR(
+                    AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.GamepadInput.LEFT_BUMPER),
+                    AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.GamepadInput.RIGHT_BUMPER)
+            );
+            rope_tightener.setPower(input_detector_for_rope_tightener);
+            rope_tightener2.setPower(input_detector_for_rope_tightener);
         }
 
 

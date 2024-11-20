@@ -82,7 +82,6 @@ public class AutoUtil {
          * Constructs and returns the chain telemetry.
          * @param telemetry The telemetry of the invoking OpMode.
          * @return ChainTelemetry.
-         * @see AutoUtil#setOpMode(LinearOpMode) AutoUtil.setOpMode(LinearOpMode)
          * **/
         public static ChainTelemetry init(Telemetry telemetry) {
             ChainTelemetry.instance = new ChainTelemetry(telemetry);
@@ -210,7 +209,6 @@ public class AutoUtil {
          * Constructs and returns the hardware.
          * @param map The hardware map of the invoking OpMode.
          * @return Hardware.
-         * @see AutoUtil#setOpMode(LinearOpMode) AutoUtil.setOpMode(LinearOpMode)
          * **/
         public static Hardware init(HardwareMap map) {
             Hardware.instance = new Hardware(map);
@@ -292,10 +290,7 @@ public class AutoUtil {
      * @param opMode The opMode to set. Must be linear because iterative OpModes apparently don't work that way.
      * **/
     public static void setOpMode(LinearOpMode opMode) {
-        if (AutoUtil.opMode != null) throw new IllegalArgumentException("It is illegal to call AutoUtil.setOpMode more than once!");
         AutoUtil.opMode = opMode;
-        AutoUtil.Hardware.init(opMode.hardwareMap);
-        AutoUtil.ChainTelemetry.init(opMode.telemetry);
     }
 
     /**
