@@ -19,17 +19,17 @@ public class arm2 extends LinearOpMode {
 
 
 
-
-
-
-
-
     @Override
     public void runOpMode() throws InterruptedException {
         AutoUtil.setOpMode(this);
 
+        rope_tightener = hardwareMap.get(CRServo.class, "rope_tightener");
+        upy_downly = hardwareMap.get(CRServo.class, "Rope_Upy_downy");
+        grippy = hardwareMap.get(CRServo.class, "Rope_arm)");
+
 
         this.waitForStart();
+
 
 
         while (this.opModeIsActive()) {
@@ -43,10 +43,7 @@ public class arm2 extends LinearOpMode {
             float fason2 = gamepad1.right_trigger;
 
 
-            //motors setting need to name on the drive hub
-            rope_tightener = hardwareMap.get(CRServo.class, "rope_tightener");
-            upy_downly = hardwareMap.get(CRServo.class, "Rope_Upy_downy");
-            grippy = hardwareMap.get(CRServo.class, "Rope_arm)");
+
 
             // setter we will see what happens
             upy_downly.setDirection(DcMotorSimple.Direction.FORWARD);
