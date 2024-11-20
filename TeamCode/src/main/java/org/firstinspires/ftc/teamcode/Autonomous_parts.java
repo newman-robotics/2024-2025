@@ -11,16 +11,6 @@ public class Autonomous_parts {
      private DcMotor rightFrontDrive = null;
      private DcMotor rightBackDrive = null;
 
-      public static final double MID_SERVO       =  0.5 ;
-      public static final double HAND_SPEED      =  0.02 ;
-      public static final double ARM_UP_POWER    =  0.45 ;
-      public static final double ARM_DOWN_POWER  = -0.45 ;
-
-     public static final double INCREMENT   = 0.05;
-     public static final int    CYCLE_MS    =   50;
-     public static final double MAX_POS     =  0.5;
-     public static final double MIN_POS     =  0.0;
-
 
      public Autonomous_parts(LinearOpMode opmode) {
          myOpMode = opmode;

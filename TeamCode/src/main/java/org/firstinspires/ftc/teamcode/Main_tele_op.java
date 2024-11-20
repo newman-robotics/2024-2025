@@ -81,8 +81,7 @@ public class Main_tele_op extends LinearOpMode {
         leftBackDrive  = hardwareMap.get(DcMotor.class, "drivebl");
         rightFrontDrive = hardwareMap.get(DcMotor.class, "drivefr");
         rightBackDrive = hardwareMap.get(DcMotor.class, "drivebr");
-        //leftarm = hardwareMap.get(DcMotor.class, "armbl");
-        //rightarm = hardwareMap.get(DcMotor.class, "armbr");
+
         // Connect to servo (Assume Robot Left Hand)
         // Change the text in quotes to match any servo name on your robot.
         //servo = hardwareMap.get(Servo.class, "rclaw");
