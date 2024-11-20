@@ -14,8 +14,12 @@ public class arm2 extends LinearOpMode {
 
 
     private CRServo rope_tightener = null;
+
+    private CRServo rope_tightener2 = null;
     private CRServo upy_downly = null;
+
     private CRServo grippy = null;
+
 
 
 
@@ -24,6 +28,7 @@ public class arm2 extends LinearOpMode {
         AutoUtil.setOpMode(this);
 
         rope_tightener = hardwareMap.get(CRServo.class, "rope_tightener");
+        rope_tightener = hardwareMap.get(CRServo.class, "rope_tightener2");
         upy_downly = hardwareMap.get(CRServo.class, "Rope_Upy_downy");
         grippy = hardwareMap.get(CRServo.class, "Rope_arm)");
 
@@ -44,7 +49,6 @@ public class arm2 extends LinearOpMode {
 
 
 
-
             // setter we will see what happens
             upy_downly.setDirection(DcMotorSimple.Direction.FORWARD);
 
@@ -53,29 +57,37 @@ public class arm2 extends LinearOpMode {
             rope_tightener.setDirection(DcMotorSimple.Direction.FORWARD);
 
 
-            //inputs and stuff
-            if (AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.GamepadInput.LEFT_TRIGGER)) {
-                upy_downly.setPower(.5);
+            Double input_detector_for_upydowny = AutoUtil.ternaryXOR(
+                    AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.GamepadInput.LEFT_TRIGGER)
 
+                    ,AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.GamepadInput.RIGHT_TRIGGER)
+
+            );
+
+            //inputs and stuff
+            if (input_detector_for_upydowny == 1) {
+                upy_downly.setPower(.5);
             }
 
-            if (AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.GamepadInput.RIGHT_TRIGGER)) {
+
+            if (input_detector_for_upydowny == -1) {
 
                 upy_downly.setPower(-.5);
             }
 
+
+
             if (AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.GamepadInput.LEFT_BUMPER)) {
                 grippy.setPower(-.5);
             }
-            if (!AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.GamepadInput.LEFT_BUMPER)){
+            else{
                 grippy.setPower(.5);
             }
 
             if (AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.GamepadInput.RIGHT_BUMPER)){
                 rope_tightener.setPower(.5);
             }
-
-            if (!AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.GamepadInput.RIGHT_BUMPER)){
+            else {
                 rope_tightener.setPower(-.5);
             }
         }
