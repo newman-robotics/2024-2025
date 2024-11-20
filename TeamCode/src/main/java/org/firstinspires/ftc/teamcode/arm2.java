@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 
@@ -17,7 +18,7 @@ public class arm2 extends LinearOpMode {
     private CRServo rope_tightener = null;
 
     private CRServo rope_tightener2 = null;
-    private CRServo upy_downly = null;
+    private DcMotor upy_downly = null;
 
     private CRServo grippy = null;
 
@@ -34,7 +35,7 @@ public class arm2 extends LinearOpMode {
         //Servo 3:  grippy           == Rope_arm
         rope_tightener = hardwareMap.get(CRServo.class, GlobalConstants.CLAW2_FIRST_MOTOR_NAME);
         rope_tightener2 = hardwareMap.get(CRServo.class, GlobalConstants.CLAW2_SECOND_MOTOR_NAME);
-        upy_downly = hardwareMap.get(CRServo.class, "arm_p1");
+        upy_downly = hardwareMap.get(DcMotor.class, "arm_p1");
         grippy = hardwareMap.get(CRServo.class, "Rope_arm)");
 
 
