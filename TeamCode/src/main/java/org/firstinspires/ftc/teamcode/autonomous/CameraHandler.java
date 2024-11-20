@@ -22,6 +22,8 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.internal.camera.CameraManagerInternal;
 import org.firstinspires.ftc.robotcore.internal.system.Deadline;
 import org.opencv.calib3d.Calib3d;
+import org.opencv.core.Core;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfDouble;
 import org.opencv.core.MatOfFloat;
@@ -231,14 +233,23 @@ public class CameraHandler {
         if (!out) RobotLog.w("CameraHandler::getLocationFromDetection: solvePnP returned false. Results from here on out may be completely random...");
         else RobotLog.w("CameraHandler::getLocationFromDetection: solvePnP returned true. I honestly don't know which is a good thing and which is a bad thing...");
 
-        //how to interpret rvec and tvec?
+        Mat rmat = new Mat();
+        Calib3d.Rodrigues(rvec, rmat);
+        Mat inversermat = new Mat();
+        Core.transpose(rmat, inversermat);
+
+        Mat inversetvec = new Mat();
+        Core.subtract(Mat.zeros(tvec.rows(), tvec.cols(), CvType.CV_64F), tvec, inversetvec);
+
+        Mat cameraPos = new Mat();
+        Core.multiply(inversermat, inversetvec, cameraPos);
 
         return null;
     }
 
     /**
      * Calculates the robot's position on the field from a camera frame.
-     * @param frame The frame from the camera. Must be in YUV/YCbCr format.
+     * @param frame The frame from the camera.
      * @return The location of the robot on the field, or null if it could not be determined.
      * **/
     @Nullable

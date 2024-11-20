@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 public class arm2 extends LinearOpMode {
 
-
+    private ElapsedTime runtime = new ElapsedTime();
     private CRServo rope_tightener = null;
     private CRServo upy_downly = null;
     private CRServo grippy = null;
