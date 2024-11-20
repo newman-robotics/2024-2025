@@ -2,16 +2,14 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 
 import org.firstinspires.ftc.teamcode.autonomous.AutoUtil;
 import org.firstinspires.ftc.teamcode.autonomous.GlobalConstants;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-@TeleOp(name="arm2", group="Linear OpMode")
+@teleop(name = "arm2")
 public class arm2 extends LinearOpMode {
 
 
@@ -24,12 +22,18 @@ public class arm2 extends LinearOpMode {
 
 
 
+
+    @Override
     public void runOpMode() throws InterruptedException {
         AutoUtil.setOpMode(this);
 
-        rope_tightener = hardwareMap.get(CRServo.class, "rope_tightener");
-        rope_tightener2 = hardwareMap.get(CRServo.class, "rope_tightener2");
-        upy_downly = hardwareMap.get(CRServo.class, "Rope_Upy_downy");
+        //Servo 1:  rope_tightener   == intake
+        //Servo 2:  rope_tightener2  == wrist
+        //Servo 3:` upy_downly       == arm_p1
+        //Servo 4:  grippy           == Rope_arm
+        rope_tightener = hardwareMap.get(CRServo.class, "intake");
+        rope_tightener = hardwareMap.get(CRServo.class, "wrist");
+        upy_downly = hardwareMap.get(CRServo.class, "arm_p1");
         grippy = hardwareMap.get(CRServo.class, "Rope_arm)");
 
 
@@ -64,17 +68,7 @@ public class arm2 extends LinearOpMode {
 
             );
 
-            //inputs and stuff
-            if (input_detector_for_upydowny == 1) {
-                upy_downly.setPower(.5);
-
-            }
-
-
-            if (input_detector_for_upydowny == -1) {
-
-                upy_downly.setPower(-.5);
-            }
+            upy_downly.setPower(input_detector_for_upydowny / 2.);
 
 
 
@@ -87,13 +81,18 @@ public class arm2 extends LinearOpMode {
 
             if (AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.GamepadInput.RIGHT_BUMPER)){
                 rope_tightener.setPower(.5);
-                rope_tightener2.setPower(.5);
             }
             else {
                 rope_tightener.setPower(-.5);
-                rope_tightener2.setPower(.5);
             }
         }
+
+
+
+
+
+
+
 
 
     }
