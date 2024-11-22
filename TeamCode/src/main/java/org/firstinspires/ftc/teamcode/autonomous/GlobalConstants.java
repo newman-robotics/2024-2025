@@ -45,12 +45,19 @@ public class GlobalConstants {
     //these are motors that are used in the arm, the actuator raises the arm up and down
     //the elbow is like an elbow attached at the end of the actuator to control where the claw goes
     public static final String ARM_VERTICAL_MOTOR_NAME = "actuator";
-    public static final String ARM_ELBOW_MOTOR_NAME = "elbow";
+    @Deprecated
+    public static final String OLD_ARM_ELBOW_MOTOR_NAME = "elbow";
 
     //these are servos that control the claw, the wrist is like a wrist and controls the angle of the claw
     //the intake is a system that will grab the pieces and store them
-    public static final String CLAW_WRIST_MOTOR_NAME = "wrist";
-    public static final String CLAW_INTAKE_MOTOR_NAME = "intake";
+    @Deprecated
+    public static final String OLD_CLAW_WRIST_MOTOR_NAME = "wrist";
+    @Deprecated
+    public static final String OLD_CLAW_INTAKE_MOTOR_NAME = "intake";
+
+    public static final String ARM_ELBOW_MOTOR_NAME = "elbow";
+    public static final String ARM_VERTICAL_SERVO_MOTOR_NAME = "elevation";
+    public static final String CLAW_MOTOR_NAME = "claw";
 
     public static final String CLAW2_FIRST_MOTOR_NAME = "wrist";
     public static final String CLAW2_SECOND_MOTOR_NAME = "intake";
@@ -76,10 +83,19 @@ public class GlobalConstants {
     public static final GamepadInput SLOW = GamepadInput.BUTTON_A;
 
     public static final GamepadInput ARM_CLAW_INPUT = GamepadInput.RIGHT_STICK_Y;
-    public static final GamepadInput ARM_ELEVATION_MODIFIER = GamepadInput.LEFT_BUMPER;
-    public static final GamepadInput ARM_ELBOW_MODIFIER = GamepadInput.RIGHT_BUMPER;
-    public static final GamepadInput CLAW_INTAKE_MODIFIER = GamepadInput.LEFT_TRIGGER;
-    public static final GamepadInput CLAW_WRIST_MODIFIER = GamepadInput.RIGHT_TRIGGER;
+    @Deprecated
+    public static final GamepadInput OLD_ARM_ELEVATION_MODIFIER = GamepadInput.LEFT_BUMPER;
+    @Deprecated
+    public static final GamepadInput OLD_ARM_ELBOW_MODIFIER = GamepadInput.RIGHT_BUMPER;
+    @Deprecated
+    public static final GamepadInput OLD_CLAW_INTAKE_MODIFIER = GamepadInput.LEFT_TRIGGER;
+    @Deprecated
+    public static final GamepadInput OLD_CLAW_WRIST_MODIFIER = GamepadInput.RIGHT_TRIGGER;
+
+    public static final GamepadInput ARM_LOWER_MODIFIER = GamepadInput.LEFT_TRIGGER;
+    public static final GamepadInput ARM_UPPER_MODIFIER = GamepadInput.RIGHT_TRIGGER;
+    public static final GamepadInput ARM_ELBOW_MODIFIER = GamepadInput.LEFT_BUMPER;
+    public static final GamepadInput CLAW_MODIFIER = GamepadInput.RIGHT_BUMPER;
 
 
     //
@@ -88,7 +104,13 @@ public class GlobalConstants {
 
     public static final double CLAW_WRIST_POSITION_MODIFIER = 0.01;
 
+    /**
+     * @deprecated The claw is installed, and is likely not coming off anytime soon.
+     * **/
+    @Deprecated
     public static final boolean CLAW_IS_INSTALLED = true;
+
+    public static final boolean NEW_ARM_IS_INSTALLED = true;
 
     //Forward
     //Sideways

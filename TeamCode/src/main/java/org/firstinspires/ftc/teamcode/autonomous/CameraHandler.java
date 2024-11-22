@@ -10,7 +10,6 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
-import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.android.util.Size;
 import org.firstinspires.ftc.robotcore.external.function.Continuation;
 import org.firstinspires.ftc.robotcore.external.function.ContinuationResult;
@@ -27,10 +26,12 @@ import org.firstinspires.ftc.robotcore.internal.camera.CameraManagerInternal;
 import org.firstinspires.ftc.robotcore.internal.system.Deadline;
 import org.opencv.android.Utils;
 import org.opencv.calib3d.Calib3d;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfDouble;
 import org.opencv.core.MatOfFloat;
 import org.opencv.core.MatOfPoint2f;
+import org.opencv.core.MatOfPoint3;
 import org.opencv.core.MatOfPoint3f;
 import org.opencv.core.Point;
 import org.opencv.core.Point3;
@@ -267,22 +268,22 @@ public class CameraHandler {
      * @return A MatOfPoint2f representative of the original Mat's corners.
      * **/
     private static MatOfPoint2f convertCornerSet(Mat cornerSet) {
-        RobotLog.i("CameraHandler.convertCornerSet: cornerSet = " + cornerSet);
+        //RobotLog.i("CameraHandler.convertCornerSet: cornerSet = " + cornerSet);
 
         double firstx = cornerSet.get(0, 0)[0];
-        double firsty = cornerSet.get(0, 1)[0];
+        double firsty = cornerSet.get(0, 0)[1];
         Point first = new Point(firstx, firsty);
 
-        double secondx = cornerSet.get(1, 0)[0];
-        double secondy = cornerSet.get(1, 1)[0];
+        double secondx = cornerSet.get(0, 1)[0];
+        double secondy = cornerSet.get(0, 1)[1];
         Point second = new Point(secondx, secondy);
 
-        double thirdx = cornerSet.get(2, 0)[0];
-        double thirdy = cornerSet.get(2, 1)[0];
+        double thirdx = cornerSet.get(0, 2)[0];
+        double thirdy = cornerSet.get(0, 2)[1];
         Point third = new Point(thirdx, thirdy);
 
-        double fourthx = cornerSet.get(3, 0)[0];
-        double fourthy = cornerSet.get(3, 1)[0];
+        double fourthx = cornerSet.get(0, 3)[0];
+        double fourthy = cornerSet.get(0, 3)[1];
         Point fourth = new Point(fourthx, fourthy);
 
         return new MatOfPoint2f(first, second, third, fourth);
@@ -299,7 +300,9 @@ public class CameraHandler {
         //MatOfPoint3f objectPoints = CameraHandler.aprilTagWorldContours[id - 11];
         MatOfPoint2f imageCorners = CameraHandler.convertCornerSet(cornerSet);
 
-        Mat rvec = new Mat(), tvec = new Mat();
+        RobotLog.i("Solving PnP...");
+
+        Mat rvec = new Mat(3, 1, CvType.CV_32F), tvec = new Mat(3, 1, CvType.CV_32F);
         boolean out = Calib3d.solvePnP(CameraHandler.aprilTagOriginContours, imageCorners, CameraHandler.cameraMatrix, CameraHandler.distCoeffs, rvec, tvec);
 
         if (!out) {
@@ -308,7 +311,8 @@ public class CameraHandler {
         }
 
         AutoUtil.ChainTelemetry telemetry = null;
-        try {telemetry = AutoUtil.ChainTelemetry.get();} catch (IllegalAccessException e) {throw new RuntimeException(e);}
+        telemetry = AutoUtil.ChainTelemetry.get();
+        assert telemetry != null;
         telemetry.add("Data in inches and (probably) radians.")
             .add("Detection ID: ", id)
             .add("Relative X: ", tvec.get(0, 0)[0]).add("Relative Y: ", tvec.get(1, 0)[0]).add("Relative Z: ", tvec.get(2, 0)[0])

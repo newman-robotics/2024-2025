@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.autonomous;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -90,11 +91,10 @@ public class AutoUtil {
 
         /**
          * Gets the ChainTelemetry.
-         * @return ChainTelemetry.
-         * @throws IllegalAccessException Throws if the ChainTelemetry instance has not been initialised.
+         * @return ChainTelemetry, or null if it hasn't been constructed.
          * **/
-        public static ChainTelemetry get() throws IllegalAccessException {
-            if (ChainTelemetry.instance == null) throw new IllegalAccessException("ChainTelemetry requested, but not initialised!");
+        @Nullable
+        public static ChainTelemetry get() {
             return ChainTelemetry.instance;
         }
 
@@ -162,14 +162,15 @@ public class AutoUtil {
      * The entire hardware for the robot. Singleton class.
      * Why is this in AutoUtil and not its own dedicated class, I hear you ask?
      * I have no clue.
+     * @apiNote This is the new version of the hardware. The old version can be found at {@link DeprecatedUtil.Hardware}
      * **/
     public static class Hardware {
         private static Hardware instance = null;
 
         private final DcMotor frontLeft, frontRight, backLeft, backRight;
-        private final DcMotor armElevation, armElbow;
-        private final CRServo clawIntake;
-        private final Servo clawWrist;
+        private final DcMotor lowerArm, armElbow;
+        private final CRServo upperArm;
+        private final Servo claw;
 
         private Hardware(HardwareMap map) {
             this.frontLeft = map.get(DcMotor.class, GlobalConstants.FRONT_LEFT_MOTOR_NAME);
@@ -177,16 +178,11 @@ public class AutoUtil {
             this.backLeft = map.get(DcMotor.class, GlobalConstants.BACK_LEFT_MOTOR_NAME);
             this.backRight = map.get(DcMotor.class, GlobalConstants.BACK_RIGHT_MOTOR_NAME);
 
-            this.armElevation = map.get(DcMotor.class, GlobalConstants.ARM_VERTICAL_MOTOR_NAME);
+            this.lowerArm = map.get(DcMotor.class, GlobalConstants.ARM_VERTICAL_MOTOR_NAME);
             this.armElbow = map.get(DcMotor.class, GlobalConstants.ARM_ELBOW_MOTOR_NAME);
 
-            if (GlobalConstants.CLAW_IS_INSTALLED) {
-                this.clawWrist = map.get(Servo.class, GlobalConstants.CLAW_WRIST_MOTOR_NAME);
-                this.clawIntake = map.get(CRServo.class, GlobalConstants.CLAW_INTAKE_MOTOR_NAME);
-            } else {
-                this.clawWrist = null;
-                this.clawIntake = null;
-            }
+            this.upperArm = map.get(CRServo.class, GlobalConstants.ARM_VERTICAL_SERVO_MOTOR_NAME);
+            this.claw = map.get(Servo.class, GlobalConstants.CLAW_MOTOR_NAME);
 
             this.backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
             this.backRight.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -197,7 +193,7 @@ public class AutoUtil {
             this.backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             this.backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-            this.armElevation.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            this.lowerArm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             this.armElbow.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
             this.armElbow.setPower(GlobalConstants.ARM_ELBOW_SPEED);
@@ -218,10 +214,9 @@ public class AutoUtil {
         /**
          * Gets the hardware.
          * @return Hardware.
-         * @throws IllegalAccessException Throws if the Hardware instance has not been initialised.
          * **/
-        public static Hardware get() throws IllegalAccessException {
-            if (Hardware.instance == null) throw new IllegalAccessException("Hardware requested, but not initialised!");
+        @Nullable
+        public static Hardware get() {
             return Hardware.instance;
         }
 
@@ -234,12 +229,9 @@ public class AutoUtil {
             this.backLeft.setPower(0);
             this.backRight.setPower(0);
 
-            this.armElevation.setPower(0);
+            this.upperArm.setPower(0);
+            this.lowerArm.setPower(0);
             this.armElbow.setPower(0);
-
-            if (GlobalConstants.CLAW_IS_INSTALLED) {
-                this.clawIntake.setPower(0);
-            }
         }
 
         /**
@@ -258,24 +250,22 @@ public class AutoUtil {
 
         /**
          * Sets the powers for the arm. Also takes care of clamping.
-         * @param elevation Elevation motor power.
+         * @param lower Lower elevation (actuator) motor power.
+         * @param upper Upper elevation (servo) motor power.
          * @param elbow Elbow motor relative position.
          * **/
-        public void setArmPowers(double elevation, int elbow) {
-            this.armElevation.setPower(elevation);
+        public void setArmPowers(double lower, double upper, int elbow) {
+            this.lowerArm.setPower(lower);
+            this.upperArm.setPower(upper);
             this.armElbow.setTargetPosition(this.armElbow.getCurrentPosition() + elbow);
         }
 
         /**
          * Sets the powers for the claw. Also takes care of clamping.
-         * @param wrist Wrist motor relative position.
-         * @param intake Intake motor power.
+         * @param claw Claw motor relative position.
          * **/
-        public void setClawPowers(double wrist, double intake) {
-            if (GlobalConstants.CLAW_IS_INSTALLED) {
-                this.clawWrist.setPosition(this.clawWrist.getPosition() + wrist);
-                this.clawIntake.setPower(AutoUtil.clamp(intake, -1, 1));
-            } else RobotLog.w("AutoUtil::Hardware::setClawPowers() called, but claw is not installed!");
+        public void setClawPowers(double claw) {
+            this.claw.setPosition(this.claw.getPosition() + claw);
         }
     }
 
@@ -423,5 +413,17 @@ public class AutoUtil {
             case RIGHT_STICK_BUTTON: return AutoUtil.opMode.gamepad1.right_stick_button;
             default: throw new IllegalArgumentException("Illegal GlobalConstants.GamepadInput " + input + "!");
         }
+    }
+
+    /**
+     * Returns true if there is more than one true value in vals. Otherwise, returns false.
+     * **/
+    public static boolean notMoreThanOne(boolean... vals) {
+        boolean oneFound = false;
+        for (boolean val : vals) if (val) {
+            if (oneFound) return false;
+            oneFound = true;
+        }
+        return true;
     }
 }
