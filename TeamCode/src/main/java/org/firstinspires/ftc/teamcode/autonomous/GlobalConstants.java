@@ -62,8 +62,13 @@ public class GlobalConstants {
     public static final String CLAW2_FIRST_MOTOR_NAME = "wrist";
     public static final String CLAW2_SECOND_MOTOR_NAME = "intake";
 
-    //this has no use currently but if we make a new arm UPDATE THIS COMMENT
-    public static final String NEW_ARM_MAYBE_NAME = "";
+    //This might be used in a third version of the arm
+    public static final String ARM3_TOP_SERVO_TIGHTENER_NAME = "Servo_tightener";
+
+    public static final String ARM3_BOTTOM_SERVO_CLAW_NAME = "Servo_claw";
+
+    public static final String ARM3_BASE_NAME = "Base";
+
 
     //this isn't a motor but controls the camera
     public static final String WEBCAM_NAME = "webcam";
