@@ -138,4 +138,9 @@ public class GlobalConstants {
 
 
     public static final long MOTION_MILLIS_TILE = (long)Math.floor(MOTION_MILLIS_TILE_FULL_SPEED / MOTION_SPEED);
+
+    public static final int MAX_CAMERA_PROCESSING_THREADS = 10;
+
+    public static final int CAMERA_X_SIZE = 640;
+    public static final int CAMERA_Y_SIZE = 480;
 }

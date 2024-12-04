@@ -26,12 +26,12 @@ import org.firstinspires.ftc.robotcore.internal.camera.CameraManagerInternal;
 import org.firstinspires.ftc.robotcore.internal.system.Deadline;
 import org.opencv.android.Utils;
 import org.opencv.calib3d.Calib3d;
+import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfDouble;
 import org.opencv.core.MatOfFloat;
 import org.opencv.core.MatOfPoint2f;
-import org.opencv.core.MatOfPoint3;
 import org.opencv.core.MatOfPoint3f;
 import org.opencv.core.Point;
 import org.opencv.core.Point3;
@@ -39,10 +39,22 @@ import org.opencv.objdetect.ArucoDetector;
 import org.opencv.objdetect.Objdetect;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
+import java.util.function.BinaryOperator;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 /**
  * Static functions related to the camera.
@@ -71,7 +83,6 @@ public class CameraHandler {
         return new MatOfPoint3f(first, second, third, fourth);
     }
 
-    //NOTE: internally we use inches, but we convert to fields after (1 field = 144 inches)
     //Format: 11 - 12 - 13 - 14 - 15 - 16
     private static final MatOfPoint3f[] aprilTagWorldContours = {
         CameraHandler.getContours(24., true, true),
@@ -88,7 +99,7 @@ public class CameraHandler {
         RobotLog.i("Creating calibration matrices...");
 
         float[] cameraMatrixRaw = {822.317f, 0.f, 319.495f, 0.f, 822.317f, 242.502f, 0.f, 0.f, 1.f};
-        CameraHandler.cameraMatrix = new MatOfFloat(cameraMatrixRaw)/*.reshape(0, new int[]{3, 3})*/;
+        CameraHandler.cameraMatrix = new MatOfFloat(cameraMatrixRaw).reshape(0, new int[]{3, 3});
 
         RobotLog.i("Created camera matrix...");
 
@@ -100,12 +111,12 @@ public class CameraHandler {
 
     /**
      * Field coordinate system:
-     * All coordinates range from 0 to 1.
+     * All coordinates range from 0 to 144 (inches).
      * X runs from the blue basket to the red parking zone.
      * Y runs from the blue basket to the blue parking zone.
-     * Therefore, (0, 0) is at the blue basket, (1, 0) is at
-     * the red parking zone, (0, 1) is at the blue parking
-     * zone, and (1, 1) is at the red basket.
+     * Therefore, (0, 0) is at the blue basket, (144, 0) is at
+     * the red parking zone, (0, 144) is at the blue parking
+     * zone, and (144, 144) is at the red basket.
      * Additionally, 0 degrees is pointing from -X to +X.
      * Why is it like this? I don't know! I made it up!
      * **/
@@ -136,10 +147,11 @@ public class CameraHandler {
     public static class CameraFrameCallback implements CameraCaptureSession.CaptureCallback {
         private final Consumer<Mat> callback;
         private Bitmap lastBitmap;
+        private final ExecutorService executor = Executors.newFixedThreadPool(GlobalConstants.MAX_CAMERA_PROCESSING_THREADS);
 
         /**
          * Creates a camera frame callback from the given consumer.
-         * @param callback The consumer to be called on every frame. (The frame is RGB.)
+         * @param callback The consumer to be called asynchronously on every frame. (The frame is RGB.)
          * **/
         public CameraFrameCallback(Consumer<Mat> callback) {
             this.callback = callback;
@@ -163,12 +175,13 @@ public class CameraHandler {
             this.lastBitmap = request.createEmptyBitmap();
             Bitmap bmp = request.createEmptyBitmap();
             cameraFrame.copyToBitmap(bmp);
-            Mat cvFrame = new Mat();
-            Bitmap bmp2 = bmp.copy(Bitmap.Config.RGB_565, false);
-            Utils.bitmapToMat(bmp2, cvFrame);
-            //inefficient but useful for debugging
-            Utils.matToBitmap(cvFrame, this.lastBitmap);
-            callback.accept(cvFrame);
+
+            executor.submit(() -> {
+                Mat cvFrame = new Mat();
+                Bitmap bmp2 = bmp.copy(Bitmap.Config.RGB_565, false);
+                Utils.bitmapToMat(bmp2, cvFrame);
+                callback.accept(cvFrame);
+            });
         }
 
         /**
@@ -186,7 +199,6 @@ public class CameraHandler {
     /**
      * Creates a camera. Also sets it up with the given frame callback.
      * That way, I don't have to worry about it later.
-     * NOTE TO SELF: The camera must be named "webcam".
      *
      * @param map The invoking OpMode's hardware map.
      * @param xSize The width of the capture.
@@ -219,7 +231,6 @@ public class CameraHandler {
             @Override public void onError(@NonNull Camera camera, Camera.Error error) {
                 RobotLog.e("Error during creation of camera " + camera + ": " + error);
                 camera.close();
-                cameraCreated.decrement();
             }
         }));
         RobotLog.i("Waiting...");
@@ -302,7 +313,7 @@ public class CameraHandler {
 
         RobotLog.i("Solving PnP...");
 
-        Mat rvec = new Mat(3, 1, CvType.CV_32F), tvec = new Mat(3, 1, CvType.CV_32F);
+        Mat rvec = new Mat(3, 1, CvType.CV_64F), tvec = new Mat(3, 1, CvType.CV_64F);
         boolean out = Calib3d.solvePnP(CameraHandler.aprilTagOriginContours, imageCorners, CameraHandler.cameraMatrix, CameraHandler.distCoeffs, rvec, tvec);
 
         if (!out) {
@@ -310,43 +321,40 @@ public class CameraHandler {
             return null;
         }
 
-        AutoUtil.ChainTelemetry telemetry = null;
-        telemetry = AutoUtil.ChainTelemetry.get();
+        RobotLog.i("Solved PnP; calculating world pos...");
+
+        Mat rmat = new Mat();
+        Calib3d.Rodrigues(rvec, rmat);
+
+        RobotLog.i("Reversing rotation...");
+
+        Mat origin = Mat.zeros(1, 1, CvType.CV_64FC3);
+        Mat cameraRotationChannels = new Mat();
+        Core.transform(origin, cameraRotationChannels, rmat);
+
+        RobotLog.i("Applying channel transform...");
+
+        //transform from 1x1 with 3 channels to 3x1 with 1 channel
+        Mat cameraRotation = Mat.zeros(3, 1, CvType.CV_64F);
+        cameraRotation.put(0, 0, cameraRotationChannels.get(0, 0));
+
+        RobotLog.i("Reversing translation...");
+
+        Mat cameraTranslation = new Mat(3, 1, CvType.CV_64F);
+        Core.add(cameraRotation, tvec, cameraTranslation);
+
+        RobotLog.i("Putting telemetry...");
+
+        AutoUtil.ChainTelemetry telemetry = AutoUtil.ChainTelemetry.get();
         assert telemetry != null;
         telemetry.add("Data in inches and (probably) radians.")
             .add("Detection ID: ", id)
-            .add("Relative X: ", tvec.get(0, 0)[0]).add("Relative Y: ", tvec.get(1, 0)[0]).add("Relative Z: ", tvec.get(2, 0)[0])
-            .add("Relative Yaw:   ", rvec.get(0, 0)[0]).add("Relative Pitch: ", rvec.get(1, 0)[0]).add("Relative Roll:  ", rvec.get(2, 0)[0])
+            //.add("Relative X: ", tvec.get(0, 0)[0]).add("Relative Y: ", tvec.get(1, 0)[0]).add("Relative Z: ", tvec.get(2, 0)[0])
+            //.add("Relative Yaw:   ", rvec.get(0, 0)[0]).add("Relative Pitch: ", rvec.get(1, 0)[0]).add("Relative Roll:  ", rvec.get(2, 0)[0])
+            .add("World origin X: ", cameraTranslation.get(0, 0)[0]).add("World origin Y: ", cameraTranslation.get(0, 1)[0]).add("World origin Z: ", cameraTranslation.get(0, 2)[0])
             .update();
 
         return null;
-
-        /*
-        Mat rmat = new Mat();
-        Calib3d.Rodrigues(rvec, rmat);
-        Mat inversermat = new Mat();
-        Core.transpose(rmat, inversermat);
-
-        Mat inversetvec = new Mat();
-        Core.subtract(Mat.zeros(tvec.rows(), tvec.cols(), CvType.CV_64F), tvec, inversetvec);
-
-        Mat cameraPos = new Mat();
-        Core.multiply(inversermat, inversetvec, cameraPos);
-
-        double x = cameraPos.get(1, 1)[0] / 144.;
-        //I think OpenCV orders coordinates XZY so this might be wrong...
-        //...then again OpenCV doesn't really care, I don't think
-        double y = cameraPos.get(3, 1)[0] / 144.;
-        //I think rvec is [yaw, pitch, roll]...
-        double theta = rvec.get(1, 1)[0];
-
-        FieldPos ret = new FieldPos(x, y, theta);
-
-        AutoUtil.getOpMode().telemetry.addData("Position: ", ret);
-        AutoUtil.getOpMode().telemetry.update();
-
-        return ret;
-        */
     }
 
     /**

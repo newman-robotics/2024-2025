@@ -10,9 +10,6 @@ import org.firstinspires.ftc.robotcore.external.stream.CameraStreamServer;
 
 @Autonomous(name="AutoMain")
 public class AutoMain extends LinearOpMode {
-    public static int X_SIZE = 640;
-    public static int Y_SIZE = 480;
-
     /**
      * The main function.
      * **/
@@ -28,7 +25,7 @@ public class AutoMain extends LinearOpMode {
             RobotLog.i("Creating callback...");
             CameraHandler.CameraFrameCallback callback = new CameraHandler.CameraFrameCallback(CameraHandler::getLocationOnBoard);
             RobotLog.i("Creating camera...");
-            camera = CameraHandler.createCamera(this.hardwareMap, X_SIZE, Y_SIZE, callback);
+            camera = CameraHandler.createCamera(this.hardwareMap, GlobalConstants.CAMERA_X_SIZE, GlobalConstants.CAMERA_Y_SIZE, callback);
             if (camera == null) throw new RuntimeException("Failed to open camera (check logs for details)");
             RobotLog.i("Setting camera stream source...");
             CameraStreamServer.getInstance().setSource(callback.getCameraStreamSource());

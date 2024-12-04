@@ -29,10 +29,10 @@ public class NotCopiedDrive extends LinearOpMode {
     public void updateArmClaw() {
         double stick = AutoUtil.parseGamepadInputAsDouble(GlobalConstants.ARM_CLAW_INPUT);
 
-        boolean armLower = AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.OLD_ARM_ELEVATION_MODIFIER);
-        boolean armUpper = AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.OLD_ARM_ELBOW_MODIFIER);
-        boolean armElbow = AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.OLD_CLAW_WRIST_MODIFIER);
-        boolean claw = AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.OLD_CLAW_INTAKE_MODIFIER);
+        boolean armLower = AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.ARM_LOWER_MODIFIER);
+        boolean armUpper = AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.ARM_UPPER_MODIFIER);
+        boolean armElbow = AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.ARM_ELBOW_MODIFIER);
+        boolean claw = AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.CLAW_MODIFIER);
 
         //if multiple are true, don't do anything
         if (!AutoUtil.notMoreThanOne(armLower, armUpper, armElbow, claw)) {
@@ -41,7 +41,6 @@ public class NotCopiedDrive extends LinearOpMode {
             armElbow = false;
             claw = false;
         }
-        //X ? Y : Z ==== if X is true then do Y, but if not do Z
         this.hardware.setArmPowers(armLower ? stick : 0, armUpper ? stick : 0, armElbow ? (int)(stick * GlobalConstants.ARM_ELBOW_TICK_MODIFIER) : 0);
         this.hardware.setClawPowers(claw ? stick * GlobalConstants.CLAW_WRIST_POSITION_MODIFIER : 0);
     }
