@@ -39,22 +39,12 @@ import org.opencv.objdetect.ArucoDetector;
 import org.opencv.objdetect.Objdetect;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.function.BiConsumer;
-import java.util.function.BinaryOperator;
 import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
 
 /**
  * Static functions related to the camera.
@@ -262,12 +252,18 @@ public class CameraHandler {
                     RobotLog.i("Capture session closed!");
                 }
             }));
-            boolean timedOut = AutoUtil.waitOnCounter(cameraOpened, 5000);
-            if (timedOut) {
-                RobotLog.e("Timed out while opening the camera!");
+            try {
+                boolean timedOut = AutoUtil.waitOnCounter(cameraOpened, 5000);
+                if (timedOut) {
+                    RobotLog.e("Timed out while opening the camera!");
+                    session.close();
+                    camera.close();
+                    return null;
+                }
+            } catch (AutoUtil.OpModeInterruptedException e) {
                 session.close();
                 camera.close();
-                return null;
+                throw e;
             }
         }
         return camera;
@@ -311,7 +307,7 @@ public class CameraHandler {
         //MatOfPoint3f objectPoints = CameraHandler.aprilTagWorldContours[id - 11];
         MatOfPoint2f imageCorners = CameraHandler.convertCornerSet(cornerSet);
 
-        RobotLog.i("Solving PnP...");
+        //RobotLog.i("Solving PnP...");
 
         Mat rvec = new Mat(3, 1, CvType.CV_64F), tvec = new Mat(3, 1, CvType.CV_64F);
         boolean out = Calib3d.solvePnP(CameraHandler.aprilTagOriginContours, imageCorners, CameraHandler.cameraMatrix, CameraHandler.distCoeffs, rvec, tvec);
@@ -321,37 +317,37 @@ public class CameraHandler {
             return null;
         }
 
-        RobotLog.i("Solved PnP; calculating world pos...");
+        //RobotLog.i("Solved PnP; calculating world pos...");
 
         Mat rmat = new Mat();
         Calib3d.Rodrigues(rvec, rmat);
 
-        RobotLog.i("Reversing rotation...");
+        //RobotLog.i("Reversing rotation...");
 
         Mat origin = Mat.zeros(1, 1, CvType.CV_64FC3);
         Mat cameraRotationChannels = new Mat();
         Core.transform(origin, cameraRotationChannels, rmat);
 
-        RobotLog.i("Applying channel transform...");
+        //RobotLog.i("Applying channel transform...");
 
         //transform from 1x1 with 3 channels to 3x1 with 1 channel
         Mat cameraRotation = Mat.zeros(3, 1, CvType.CV_64F);
         cameraRotation.put(0, 0, cameraRotationChannels.get(0, 0));
 
-        RobotLog.i("Reversing translation...");
+        //RobotLog.i("Reversing translation...");
 
         Mat cameraTranslation = new Mat(3, 1, CvType.CV_64F);
         Core.add(cameraRotation, tvec, cameraTranslation);
 
-        RobotLog.i("Putting telemetry...");
+        //RobotLog.i("Putting telemetry...");
 
         AutoUtil.ChainTelemetry telemetry = AutoUtil.ChainTelemetry.get();
         assert telemetry != null;
         telemetry.add("Data in inches and (probably) radians.")
             .add("Detection ID: ", id)
-            //.add("Relative X: ", tvec.get(0, 0)[0]).add("Relative Y: ", tvec.get(1, 0)[0]).add("Relative Z: ", tvec.get(2, 0)[0])
-            //.add("Relative Yaw:   ", rvec.get(0, 0)[0]).add("Relative Pitch: ", rvec.get(1, 0)[0]).add("Relative Roll:  ", rvec.get(2, 0)[0])
-            .add("World origin X: ", cameraTranslation.get(0, 0)[0]).add("World origin Y: ", cameraTranslation.get(0, 1)[0]).add("World origin Z: ", cameraTranslation.get(0, 2)[0])
+            .add("World origin X: ", cameraTranslation.get(0, 0)[0])
+            .add("World origin Y: ", cameraTranslation.get(0, 1)[0])
+            .add("World origin Z: ", cameraTranslation.get(0, 2)[0])
             .update();
 
         return null;

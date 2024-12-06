@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.deprecated;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
@@ -41,24 +41,12 @@ public class arm3_adjusments_from_arm2_ extends LinearOpMode {
             boolean claw_close = gamepad1.right_bumper;
             boolean claw_open = gamepad1.left_bumper;
 
-            if (tighten){
-                top_rope_tightener.setPosition(top_rope_tightener.getPosition() + 0.1);
-            }
-            else if (untighten){
-                top_rope_tightener.setPosition(top_rope_tightener.getPosition() - 0.1);
-            }
-            else if (arm_up){
-                top_base.setPower(top_base.getPower() + 0.1);
-            }
-            else if (arm_down){
-                top_base.setPower(top_base.getPower() - 0.1);
-            }
-            else if (claw_close){
-                bottom_claw.setPosition(bottom_claw.getPosition() + 0.1);
-            }
-            else if (claw_open){
-                bottom_claw.setPosition(bottom_claw.getPosition() - 0.1);
-            }
+            if (tighten)top_rope_tightener.setPosition(top_rope_tightener.getPosition() + 0.1);
+            else if (untighten) top_rope_tightener.setPosition(top_rope_tightener.getPosition() - 0.1);
+            else if (arm_up) top_base.setPower(top_base.getPower() + 0.1);
+            else if (arm_down) top_base.setPower(top_base.getPower() - 0.1);
+            else if (claw_close) bottom_claw.setPosition(bottom_claw.getPosition() + 0.1);
+            else if (claw_open) bottom_claw.setPosition(bottom_claw.getPosition() - 0.1);
         }
 
     }

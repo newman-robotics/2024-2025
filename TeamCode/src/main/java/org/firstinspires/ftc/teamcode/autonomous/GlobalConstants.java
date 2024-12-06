@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.autonomous;
 
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+
 // making a class with all the control parts and there names n stuff
 public class GlobalConstants {
     //These are the buttons on the controllers
@@ -115,8 +117,6 @@ public class GlobalConstants {
     @Deprecated
     public static final boolean CLAW_IS_INSTALLED = true;
 
-    public static final boolean NEW_ARM_IS_INSTALLED = true;
-
     //Forward
     //Sideways
     //Backwards
@@ -143,4 +143,9 @@ public class GlobalConstants {
 
     public static final int CAMERA_X_SIZE = 640;
     public static final int CAMERA_Y_SIZE = 480;
+
+    public static final String ODOMETRY_NAME = "odo";
+    //millis
+    public static final double ODOMETRY_X_OFFSET = DistanceUnit.mmPerInch * 3.25;
+    public static final double ODOMETRY_Y_OFFSET = DistanceUnit.mmPerInch * 6;
 }

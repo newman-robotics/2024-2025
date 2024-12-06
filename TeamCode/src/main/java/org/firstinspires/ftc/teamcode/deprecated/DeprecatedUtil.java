@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.autonomous;
+package org.firstinspires.ftc.teamcode.deprecated;
 
 import androidx.annotation.Nullable;
 
@@ -8,6 +8,9 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.RobotLog;
+
+import org.firstinspires.ftc.teamcode.autonomous.AutoUtil;
+import org.firstinspires.ftc.teamcode.autonomous.GlobalConstants;
 
 /**
  * Deprecated versions of AutoUtil (and perhaps other classes).
