@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode.autonomous;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
+import com.qualcomm.robotcore.hardware.Gamepad;
+
 // making a class with all the control parts and there names n stuff
 public class GlobalConstants {
     //These are the buttons on the controllers
@@ -65,11 +67,11 @@ public class GlobalConstants {
     public static final String CLAW2_SECOND_MOTOR_NAME = "intake";
 
     //This might be used in a third version of the arm
-    public static final String ARM3_TOP_SERVO_TIGHTENER_NAME = "Servo_tightener";
+    public static final String ARM3_TOP_SERVO_TIGHTENER_NAME = "CRServo_tightener";
 
     public static final String ARM3_BOTTOM_SERVO_CLAW_NAME = "Servo_claw";
 
-    public static final String ARM3_BASE_NAME = "Base";
+    public static final String ARM3_BASE_NAME = "Base_motor";
 
 
     //this isn't a motor but controls the camera
@@ -88,6 +90,7 @@ public class GlobalConstants {
     public static final GamepadInput LATERAL = GamepadInput.LEFT_STICK_Y;
     public static final GamepadInput YAW = GamepadInput.RIGHT_STICK_X;
     public static final GamepadInput SLOW = GamepadInput.BUTTON_A;
+    public static final GamepadInput XVARTESTNEWCODE = GamepadInput.BUTTON_Y;
 
     public static final GamepadInput ARM_CLAW_INPUT = GamepadInput.RIGHT_STICK_Y;
     @Deprecated
