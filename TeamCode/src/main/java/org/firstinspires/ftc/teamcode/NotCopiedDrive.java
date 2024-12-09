@@ -8,7 +8,7 @@ import org.firstinspires.ftc.teamcode.autonomous.FieldWorld;
 import org.firstinspires.ftc.teamcode.autonomous.GlobalConstants;
 
 //Whatever the name is will appear in the driver hub select display
-@TeleOp(name="Modus Operandi")
+@TeleOp(name="OPTIMAL CONTROLS")
 public class NotCopiedDrive extends LinearOpMode {
     public AutoUtil.Hardware hardware;
     public void updateDrivetrain() {

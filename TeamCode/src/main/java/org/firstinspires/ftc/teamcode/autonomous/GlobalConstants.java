@@ -4,6 +4,17 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 import com.qualcomm.robotcore.hardware.Gamepad;
 
+/* Configuration:
+Expansion hub (Servos): port 5 = claw
+Expansion hub (Servos): port 3 = intake
+Expansion hub (Servos): port 2 = wrist (Continuous Rotation)
+
+Expansion hub (Motors): port 0 = actuator
+Expansion hub (Motors): port 1 = elbow
+Expansion hub (Motors): port 2 = elbow2
+Expansion hub (Motors): port 3 = elevation
+* */
+
 // making a class with all the control parts and there names n stuff
 public class GlobalConstants {
     //These are the buttons on the controllers
