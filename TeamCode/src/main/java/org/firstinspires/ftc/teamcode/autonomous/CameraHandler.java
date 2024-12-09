@@ -44,6 +44,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 /**
@@ -109,6 +110,8 @@ public class CameraHandler {
      * zone, and (144, 144) is at the red basket.
      * Additionally, 0 degrees is pointing from -X to +X.
      * Why is it like this? I don't know! I made it up!
+     * @apiNote In the current implementation of getLocationOnBoard, the heading is always 0.
+     * This is suitable for our current purposes, but can be problematic if exact heading is required.
      * **/
     public static class FieldPos {
         public final double x;
@@ -136,8 +139,9 @@ public class CameraHandler {
      * **/
     public static class CameraFrameCallback implements CameraCaptureSession.CaptureCallback {
         private final Consumer<Mat> callback;
-        private Bitmap lastBitmap;
+        private AtomicReference<Bitmap> lastBitmap = new AtomicReference<>(null);
         private final ExecutorService executor = Executors.newFixedThreadPool(GlobalConstants.MAX_CAMERA_PROCESSING_THREADS);
+        private boolean isZombie = false;
 
         /**
          * Creates a camera frame callback from the given consumer.
@@ -153,6 +157,12 @@ public class CameraHandler {
          * **/
         @Override
         public void onNewFrame(@NonNull CameraCaptureSession session, @NonNull CameraCaptureRequest request, @NonNull CameraFrame cameraFrame) {
+            if (isZombie) {
+                RobotLog.e("CameraFrameCallback running on zombie thread!");
+                session.close();
+                return;
+            }
+
             if (cameraFrame.getFrameNumber() % 10 == 0) RobotLog.i("CameraFrameCallback::onNewFrame(" + cameraFrame.getFrameNumber() + ")...");
 
             byte[] rawData = cameraFrame.getImageData();
@@ -162,9 +172,9 @@ public class CameraHandler {
                 return;
             }
 
-            this.lastBitmap = request.createEmptyBitmap();
-            Bitmap bmp = request.createEmptyBitmap();
-            cameraFrame.copyToBitmap(bmp);
+            this.lastBitmap.set(request.createEmptyBitmap());
+            cameraFrame.copyToBitmap(this.lastBitmap.get());
+            Bitmap bmp = this.lastBitmap.get().copy(Bitmap.Config.RGB_565, false);
 
             executor.submit(() -> {
                 Mat cvFrame = new Mat();
@@ -180,9 +190,15 @@ public class CameraHandler {
          * **/
         public CameraStreamSource getCameraStreamSource() {
             return continuation -> continuation.dispatch((ContinuationResult<org.firstinspires.ftc.robotcore.external.function.Consumer<Bitmap>>) bitmapConsumer -> {
-                if (CameraFrameCallback.this.lastBitmap == null) RobotLog.e("Attempting to send null bitmap!");
-                else bitmapConsumer.accept(CameraFrameCallback.this.lastBitmap);
+                if (CameraFrameCallback.this.lastBitmap.get() == null) RobotLog.e("Attempting to send null bitmap!");
+                else bitmapConsumer.accept(CameraFrameCallback.this.lastBitmap.get());
             });
+        }
+
+        public void terminate() {
+            this.executor.shutdownNow();
+            this.isZombie = true;
+            this.lastBitmap.set(null);
         }
     }
 
@@ -304,6 +320,14 @@ public class CameraHandler {
      * **/
     @Nullable
     private static FieldPos getLocationFromDetection(Mat cornerSet, int id) {
+        /*
+        * How this function works:
+        * We first ask OpenCV to give us the transformations that convert a position in world space into camera space.
+        * We then convert the origin into camera space. This tells us where the origin is relative to the camera.
+        * We finally make this position negative to reverse the vector and switch which side the origin is on.
+        * This gives us a 2D (we scrap the extraneous Y coordinate in the process) vector that points from the origin to the camera.
+        * */
+
         //MatOfPoint3f objectPoints = CameraHandler.aprilTagWorldContours[id - 11];
         MatOfPoint2f imageCorners = CameraHandler.convertCornerSet(cornerSet);
 
@@ -341,16 +365,13 @@ public class CameraHandler {
 
         //RobotLog.i("Putting telemetry...");
 
-        AutoUtil.ChainTelemetry telemetry = AutoUtil.ChainTelemetry.get();
-        assert telemetry != null;
-        telemetry.add("Data in inches and (probably) radians.")
+        /*AutoUtil.ChainTelemetry.assertAndGet().add("Data in inches and (probably) radians.")
             .add("Detection ID: ", id)
             .add("World origin X: ", cameraTranslation.get(0, 0)[0])
             .add("World origin Y: ", cameraTranslation.get(0, 1)[0])
-            .add("World origin Z: ", cameraTranslation.get(0, 2)[0])
-            .update();
+            .add("World origin Z: ", cameraTranslation.get(0, 2)[0]);*/
 
-        return null;
+        return new FieldPos(-cameraTranslation.get(0, 0)[0], -cameraTranslation.get(0, 2)[0], 0);
     }
 
     /**

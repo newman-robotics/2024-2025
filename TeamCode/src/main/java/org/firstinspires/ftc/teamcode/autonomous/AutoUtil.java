@@ -99,6 +99,16 @@ public class AutoUtil {
             return ChainTelemetry.instance;
         }
 
+        /**
+         * Asserts that the ChainTelemetry is not null, then gets it.
+         * @return ChainTelemetry.
+         * **/
+        @NonNull
+        public static ChainTelemetry assertAndGet() {
+            assert ChainTelemetry.instance != null;
+            return ChainTelemetry.instance;
+        }
+
         public Telemetry getTelemetry() {
             return telemetry;
         }
