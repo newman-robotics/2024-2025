@@ -272,12 +272,18 @@ public class AutoUtil {
             this.armElbow.setTargetPosition(this.armElbow.getCurrentPosition() + elbow);
         }
 
+        public void setArmPowers2(double upper, int elbow) {
+            //this.lowerArm.setPower(lower); //Motor (Originally an actuator)
+            this.upperArm.setPower(upper); //CRservo
+            this.armElbow.setTargetPosition(this.armElbow.getCurrentPosition() + elbow); //Motor
+        }
+
         /**
          * Sets the powers for the claw. Also takes care of clamping.
          * @param claw Claw motor relative position.
          * **/
         public void setClawPowers(double claw) {
-            this.claw.setPosition(this.claw.getPosition() + claw);
+            this.claw.setPosition(this.claw.getPosition() + claw); //servo
         }
     }
 
