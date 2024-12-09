@@ -331,7 +331,7 @@ public class CameraHandler {
         //MatOfPoint3f objectPoints = CameraHandler.aprilTagWorldContours[id - 11];
         MatOfPoint2f imageCorners = CameraHandler.convertCornerSet(cornerSet);
 
-        //RobotLog.i("Solving PnP...");
+        RobotLog.i("Solving PnP...");
 
         Mat rvec = new Mat(3, 1, CvType.CV_64F), tvec = new Mat(3, 1, CvType.CV_64F);
         boolean out = Calib3d.solvePnP(CameraHandler.aprilTagOriginContours, imageCorners, CameraHandler.cameraMatrix, CameraHandler.distCoeffs, rvec, tvec);
@@ -341,37 +341,33 @@ public class CameraHandler {
             return null;
         }
 
-        //RobotLog.i("Solved PnP; calculating world pos...");
+        RobotLog.i("Solved PnP; calculating world pos...");
 
         Mat rmat = new Mat();
         Calib3d.Rodrigues(rvec, rmat);
 
-        //RobotLog.i("Reversing rotation...");
+        RobotLog.i("Reversing rotation...");
 
         Mat origin = Mat.zeros(1, 1, CvType.CV_64FC3);
         Mat cameraRotationChannels = new Mat();
         Core.transform(origin, cameraRotationChannels, rmat);
 
-        //RobotLog.i("Applying channel transform...");
+        RobotLog.i("Applying channel transform...");
 
         //transform from 1x1 with 3 channels to 3x1 with 1 channel
         Mat cameraRotation = Mat.zeros(3, 1, CvType.CV_64F);
         cameraRotation.put(0, 0, cameraRotationChannels.get(0, 0));
 
-        //RobotLog.i("Reversing translation...");
+        RobotLog.i("Reversing translation...");
 
         Mat cameraTranslation = new Mat(3, 1, CvType.CV_64F);
         Core.add(cameraRotation, tvec, cameraTranslation);
 
-        //RobotLog.i("Putting telemetry...");
+        FieldPos ret = new FieldPos(-cameraTranslation.get(0, 0)[0], -cameraTranslation.get(0, 2)[0], 0);
 
-        /*AutoUtil.ChainTelemetry.assertAndGet().add("Data in inches and (probably) radians.")
-            .add("Detection ID: ", id)
-            .add("World origin X: ", cameraTranslation.get(0, 0)[0])
-            .add("World origin Y: ", cameraTranslation.get(0, 1)[0])
-            .add("World origin Z: ", cameraTranslation.get(0, 2)[0]);*/
+        RobotLog.i("ret = " + ret);
 
-        return new FieldPos(-cameraTranslation.get(0, 0)[0], -cameraTranslation.get(0, 2)[0], 0);
+        return ret;
     }
 
     /**
@@ -385,8 +381,12 @@ public class CameraHandler {
         Mat ids = new Mat();
         CameraHandler.detector.detectMarkers(frame, corners, ids);
         for (int i = 0; i < corners.size(); ++i) {
-            FieldPos position = getLocationFromDetection(corners.get(i), (int)ids.get(i, 0)[0]);
-            if (position != null) return position;
+            RobotLog.i("Found tag with ID " + ids.get(i, 0)[0]);
+            FieldPos position = CameraHandler.getLocationFromDetection(corners.get(i), (int)ids.get(i, 0)[0]);
+            if (position != null) {
+                RobotLog.i("FieldPos from tag ID " + ids.get(i, 0)[0] + " is " + position);
+                return position;
+            }
         }
         return null;
     }
