@@ -72,6 +72,7 @@ public class GlobalConstants {
 
     public static final String ARM_ELBOW_MOTOR_NAME = "elbow";
     public static final String ARM_VERTICAL_SERVO_MOTOR_NAME = "elevation";
+    public static final String ARM_LINEAR_SLIDE_NAME = "elevation";
     public static final String CLAW_MOTOR_NAME = "claw";
 
     public static final String CLAW2_FIRST_MOTOR_NAME = "wrist";
@@ -162,4 +163,12 @@ public class GlobalConstants {
     //millis
     public static final double ODOMETRY_X_OFFSET = DistanceUnit.mmPerInch * 3.25;
     public static final double ODOMETRY_Y_OFFSET = DistanceUnit.mmPerInch * 6;
+
+    public static final GamepadInput INPUT_ACTUATOR_UP = GamepadInput.LEFT_TRIGGER;
+    public static final GamepadInput INPUT_ACTUATOR_DOWN = GamepadInput.RIGHT_TRIGGER;
+    public static final GamepadInput INPUT_ELBOW_UP = GamepadInput.LEFT_BUMPER;
+    public static final GamepadInput INPUT_ELBOW_DOWN = GamepadInput.RIGHT_BUMPER;
+    public static final GamepadInput INPUT_LINEAR_SLIDE_UP = GamepadInput.DPAD_UP;
+    public static final GamepadInput INPUT_LINEAR_SLIDE_DOWN = GamepadInput.DPAD_DOWN;
+    public static final GamepadInput INPUT_CLAW_OPEN = GamepadInput.BUTTON_A;
 }

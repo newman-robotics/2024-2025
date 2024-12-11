@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.deprecated;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -12,7 +13,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import org.firstinspires.ftc.teamcode.autonomous.AutoUtil;
 import org.firstinspires.ftc.teamcode.autonomous.GlobalConstants;
 
-
+@Disabled
 @TeleOp(name = "arm3")
 public class arm3_adjusments_from_arm2_ extends LinearOpMode {
 

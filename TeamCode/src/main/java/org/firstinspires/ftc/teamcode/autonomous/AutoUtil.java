@@ -4,16 +4,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.Func;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.teamcode.deprecated.DeprecatedUtil;
 
 /**
  * Various static functions.
@@ -170,120 +167,58 @@ public class AutoUtil {
     }
 
     /**
-     * The entire hardware for the robot. Singleton class.
-     * Why is this in AutoUtil and not its own dedicated class, I hear you ask?
-     * I have no clue.
-     * @apiNote This is the new version of the hardware. The old version can be found at {@link DeprecatedUtil.Hardware}
+     * Represents a four-wheeled drivetrain using Mecanum wheels.
+     * Singleton class.
      * **/
-    public static class Hardware {
-        private static Hardware instance = null;
+    public static class Drivetrain {
+        private static Drivetrain instance = null;
 
-        //drivetrain
-        private final DcMotor frontLeft, frontRight, backLeft, backRight;
-        private final DcMotor lowerArm, armElbow;
-        private final CRServo upperArm;
-        private final Servo claw;
+        public static Drivetrain initAndGet(HardwareMap map) {
+            Drivetrain.instance = new Drivetrain(map);
+            return Drivetrain.instance;
+        }
 
-        private Hardware(HardwareMap map) {
+        public static Drivetrain assertAndGet() {
+            assert Drivetrain.instance != null;
+            return Drivetrain.instance;
+        }
+
+        private final DcMotor frontLeft;
+        private final DcMotor frontRight;
+        private final DcMotor backLeft;
+        private final DcMotor backRight;
+
+        private Drivetrain(HardwareMap map) {
             this.frontLeft = map.get(DcMotor.class, GlobalConstants.FRONT_LEFT_MOTOR_NAME);
             this.frontRight = map.get(DcMotor.class, GlobalConstants.FRONT_RIGHT_MOTOR_NAME);
             this.backLeft = map.get(DcMotor.class, GlobalConstants.BACK_LEFT_MOTOR_NAME);
             this.backRight = map.get(DcMotor.class, GlobalConstants.BACK_RIGHT_MOTOR_NAME);
-
-            this.lowerArm = map.get(DcMotor.class, GlobalConstants.ARM_VERTICAL_MOTOR_NAME);
-            this.armElbow = map.get(DcMotor.class, GlobalConstants.ARM_ELBOW_MOTOR_NAME);
-
-            this.upperArm = map.get(CRServo.class, GlobalConstants.ARM_VERTICAL_SERVO_MOTOR_NAME);
-            this.claw = map.get(Servo.class, GlobalConstants.CLAW_MOTOR_NAME);
-
-            this.backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-            this.backRight.setDirection(DcMotorSimple.Direction.REVERSE);
-            this.frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-
-            this.frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-            this.frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-            this.backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-            this.backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-            this.lowerArm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-            this.armElbow.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-            this.armElbow.setPower(GlobalConstants.ARM_ELBOW_SPEED);
-            this.armElbow.setTargetPosition(0);
-            this.armElbow.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         }
 
-        /**
-         * Constructs and returns the hardware.
-         * @param map The hardware map of the invoking OpMode.
-         * @return Hardware.
-         * **/
-        public static Hardware init(HardwareMap map) {
-            Hardware.instance = new Hardware(map);
-            return Hardware.instance;
+        public void setPowers(double frontLeft, double frontRight, double backLeft, double backRight) {
+            this.frontLeft.setPower(frontLeft);
+            this.frontRight.setPower(frontRight);
+            this.backLeft.setPower(backLeft);
+            this.backRight.setPower(backRight);
         }
 
-        /**
-         * Gets the hardware.
-         * @return Hardware.
-         * **/
-        @Nullable
-        public static Hardware get() {
-            return Hardware.instance;
-        }
+        public void setFromGamepad() {
+            double axial = -parseGamepadInputAsDouble(GlobalConstants.AXIAL);
+            double lateral = parseGamepadInputAsDouble(GlobalConstants.LATERAL);
+            double yaw = parseGamepadInputAsDouble(GlobalConstants.YAW);
 
-        /**
-         * Stops everything from moving.
-         * **/
-        public void zeroOut() {
-            this.frontLeft.setPower(0);
-            this.frontRight.setPower(0);
-            this.backLeft.setPower(0);
-            this.backRight.setPower(0);
+            if (parseGamepadInputAsBoolean(GlobalConstants.SLOW)) {
+                axial *= GlobalConstants.SLOW_FACTOR;
+                lateral *= GlobalConstants.SLOW_FACTOR;
+                yaw *= GlobalConstants.SLOW_FACTOR;
+            }
 
-            this.upperArm.setPower(0);
-            this.lowerArm.setPower(0);
-            this.armElbow.setPower(0);
-        }
-
-        /**
-         * Sets the powers for the drivetrain. Also takes care of clamping.
-         * @param frontLeft Front left motor power.
-         * @param frontRight Front right motor power.
-         * @param backLeft Back left motor power (note: reversed due to a hardware issue).
-         * @param backRight Back right motor power.
-         * **/
-        public void setDrivetrainPowers(double frontLeft, double frontRight, double backLeft, double backRight) {
-            this.frontLeft.setPower(AutoUtil.clamp(frontLeft, -1, 1));
-            this.frontRight.setPower(AutoUtil.clamp(frontRight, -1, 1));
-            this.backLeft.setPower(AutoUtil.clamp(backLeft, -1, 1));
-            this.backRight.setPower(AutoUtil.clamp(backRight, -1, 1));
-        }
-
-        /**
-         * Sets the powers for the arm. Also takes care of clamping.
-         * @param lower Lower elevation (actuator) motor power.
-         * @param upper Upper elevation (servo) motor power.
-         * @param elbow Elbow motor relative position.
-         * **/
-        public void setArmPowers(double lower, double upper, int elbow) {
-            this.lowerArm.setPower(lower);
-            this.upperArm.setPower(upper);
-            this.armElbow.setTargetPosition(this.armElbow.getCurrentPosition() + elbow);
-        }
-
-        public void setArmPowers2(double upper, int elbow) {
-            //this.lowerArm.setPower(lower); //Motor (Originally an actuator)
-            this.upperArm.setPower(upper); //CRservo
-            this.armElbow.setTargetPosition(this.armElbow.getCurrentPosition() + elbow); //Motor
-        }
-
-        /**
-         * Sets the powers for the claw. Also takes care of clamping.
-         * @param claw Claw motor relative position.
-         * **/
-        public void setClawPowers(double claw) {
-            this.claw.setPosition(this.claw.getPosition() + claw); //servo
+            this.setPowers(
+                    axial + lateral + yaw,
+                    axial - lateral - yaw,
+                    axial - lateral + yaw,
+                    axial + lateral - yaw
+            );
         }
     }
 

@@ -25,7 +25,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
 
-@Autonomous(name="FTC9725 Test: Auto Mode F4A3", group="Test Robot")
+@Autonomous(name="SAuto F4A3", group="Test Robot")
 
 public class FTC9725_AutoF4A3 extends LinearOpMode {
 

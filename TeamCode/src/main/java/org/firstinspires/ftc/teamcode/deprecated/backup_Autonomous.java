@@ -1,15 +1,18 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.deprecated;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
+import org.firstinspires.ftc.teamcode.deprecated.Autonomous_parts;
 
+@Disabled
 @Autonomous(name="Backup_nonecammera", group="Test Robot")
 
 public class backup_Autonomous extends LinearOpMode {
 
-     Autonomous_parts  powerClaw = new Autonomous_parts(this);
+     Autonomous_parts powerClaw = new Autonomous_parts(this);
 
      private ElapsedTime     runtime = new ElapsedTime();
 

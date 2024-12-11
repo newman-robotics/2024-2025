@@ -4,6 +4,8 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.RobotLog;
 
+import org.firstinspires.ftc.teamcode.deprecated.DeprecatedUtil;
+
 @Autonomous(name = "SimpleAutonomous")
 public class SimpleAutonomous extends LinearOpMode {
     public enum Direction {
@@ -15,7 +17,7 @@ public class SimpleAutonomous extends LinearOpMode {
         ROTRIGHT
     }
 
-    AutoUtil.Hardware hardware;
+    DeprecatedUtil.OldHardware hardware;
 
     /**
      * Moves the robot for the specified time.
@@ -67,7 +69,7 @@ public class SimpleAutonomous extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         AutoUtil.setOpMode(this);
-        this.hardware = AutoUtil.Hardware.init(this.hardwareMap);
+        this.hardware = DeprecatedUtil.OldHardware.init(this.hardwareMap);
 
         this.waitForStart();
 

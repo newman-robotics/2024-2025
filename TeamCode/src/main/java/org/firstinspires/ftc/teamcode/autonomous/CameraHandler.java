@@ -363,7 +363,9 @@ public class CameraHandler {
         Mat cameraTranslation = new Mat(3, 1, CvType.CV_64F);
         Core.add(cameraRotation, tvec, cameraTranslation);
 
-        FieldPos ret = new FieldPos(-cameraTranslation.get(0, 0)[0], -cameraTranslation.get(0, 2)[0], 0);
+        double x = -cameraTranslation.get(0, 0)[0];
+        double z = -cameraTranslation.get(0, 2)[0];
+        FieldPos ret = new FieldPos(x, z, 0);
 
         RobotLog.i("ret = " + ret);
 

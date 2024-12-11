@@ -63,6 +63,8 @@ public class PinpointTest extends LinearOpMode {
             break;
         }
 
+        AutoUtil.ChainTelemetry.assertAndGet().add("Robot position finalised!");
+
         boolean isFallback;
 
         if (PinpointTest.lastPosition.get() != null) {
