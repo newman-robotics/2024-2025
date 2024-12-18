@@ -73,7 +73,7 @@ public class PinpointTest extends LinearOpMode {
             isFallback = false;
         } else {
             if (!allowFallback) throw new RuntimeException(new AutoUtil.OpModeInterruptedException("OpMode interrupted in init!"));
-            PinpointTest.odometry.setPosition(new GoBildaPinpointDriver.Pose2D(DistanceUnit.INCH, 0, 0, AngleUnit.RADIANS, 0));
+            PinpointTest.odometry.setPosition(new GoBildaPinpointDriver.Pose2D(DistanceUnit.INCH, GlobalConstants.SIMPLE_STARTING_POS_X, GlobalConstants.SIMPLE_STARTING_POS_Y, AngleUnit.RADIANS, 0));
             isFallback = true;
         }
 

@@ -2,8 +2,6 @@ package org.firstinspires.ftc.teamcode.autonomous;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
-import com.qualcomm.robotcore.hardware.Gamepad;
-
 /* Configuration:
 Expansion hub (Servos): port 5 = claw
 Expansion hub (Servos): port 3 = intake
@@ -101,7 +99,7 @@ public class GlobalConstants {
     public static final GamepadInput AXIAL = GamepadInput.LEFT_STICK_X;
     public static final GamepadInput LATERAL = GamepadInput.LEFT_STICK_Y;
     public static final GamepadInput YAW = GamepadInput.RIGHT_STICK_X;
-    public static final GamepadInput SLOW = GamepadInput.BUTTON_A;
+    public static final GamepadInput SLOW = GamepadInput.BUTTON_B;
     public static final GamepadInput XVARTESTNEWCODE = GamepadInput.BUTTON_Y;
 
     public static final GamepadInput ARM_CLAW_INPUT = GamepadInput.RIGHT_STICK_Y;
@@ -121,7 +119,7 @@ public class GlobalConstants {
 
 
     //
-    public static final double ARM_ELBOW_TICK_MODIFIER = 100.0;
+    public static final double ARM_ELBOW_TICK_MODIFIER = 5.0;
     public static final double ARM_ELBOW_SPEED = 0.8;
 
     public static final double CLAW_WRIST_POSITION_MODIFIER = 0.01;
@@ -164,11 +162,17 @@ public class GlobalConstants {
     public static final double ODOMETRY_X_OFFSET = DistanceUnit.mmPerInch * 3.25;
     public static final double ODOMETRY_Y_OFFSET = DistanceUnit.mmPerInch * 6;
 
-    public static final GamepadInput INPUT_ACTUATOR_UP = GamepadInput.LEFT_TRIGGER;
-    public static final GamepadInput INPUT_ACTUATOR_DOWN = GamepadInput.RIGHT_TRIGGER;
-    public static final GamepadInput INPUT_ELBOW_UP = GamepadInput.LEFT_BUMPER;
-    public static final GamepadInput INPUT_ELBOW_DOWN = GamepadInput.RIGHT_BUMPER;
-    public static final GamepadInput INPUT_LINEAR_SLIDE_UP = GamepadInput.DPAD_UP;
-    public static final GamepadInput INPUT_LINEAR_SLIDE_DOWN = GamepadInput.DPAD_DOWN;
-    public static final GamepadInput INPUT_CLAW_OPEN = GamepadInput.BUTTON_A;
+    public static final GamepadInput INPUT_ACTUATOR_UP = GamepadInput.DPAD_UP;
+    public static final GamepadInput INPUT_ACTUATOR_DOWN = GamepadInput.DPAD_DOWN;
+    public static final GamepadInput INPUT_ELBOW_UP = GamepadInput.RIGHT_BUMPER;
+    public static final GamepadInput INPUT_ELBOW_DOWN = GamepadInput.RIGHT_TRIGGER;
+    public static final GamepadInput INPUT_LINEAR_SLIDE_UP = GamepadInput.LEFT_BUMPER;
+    public static final GamepadInput INPUT_LINEAR_SLIDE_DOWN = GamepadInput.LEFT_TRIGGER;
+    public static final GamepadInput INPUT_CLAW = GamepadInput.BUTTON_Y;
+
+    public static final int ELBOW_TICK_LOWER_BOUND = 20;
+    public static final int ELBOW_TICK_UPPER_BOUND = 500;
+
+    public static final int SIMPLE_STARTING_POS_X = 12;
+    public static final int SIMPLE_STARTING_POS_Y = 36;
 }

@@ -110,10 +110,10 @@ public class DeprecatedUtil {
          * @param backRight Back right motor power.
          * **/
         public void setDrivetrainPowers(double frontLeft, double frontRight, double backLeft, double backRight) {
-            this.frontLeft.setPower(AutoUtil.clamp(frontLeft, -1, 1));
-            this.frontRight.setPower(AutoUtil.clamp(frontRight, -1, 1));
-            this.backLeft.setPower(AutoUtil.clamp(backLeft, -1, 1));
-            this.backRight.setPower(AutoUtil.clamp(backRight, -1, 1));
+            this.frontLeft.setPower(AutoUtil.clamp(frontLeft, -1., 1.));
+            this.frontRight.setPower(AutoUtil.clamp(frontRight, -1., 1.));
+            this.backLeft.setPower(AutoUtil.clamp(backLeft, -1., 1.));
+            this.backRight.setPower(AutoUtil.clamp(backRight, -1., 1.));
         }
 
         /**
@@ -134,7 +134,7 @@ public class DeprecatedUtil {
         public void setClawPowers(double wrist, double intake) {
             if (GlobalConstants.CLAW_IS_INSTALLED) {
                 this.clawWrist.setPosition(this.clawWrist.getPosition() + wrist);
-                this.clawIntake.setPower(AutoUtil.clamp(intake, -1, 1));
+                this.clawIntake.setPower(AutoUtil.clamp(intake, -1., 1.));
             } else RobotLog.w("AutoUtil::Hardware::setClawPowers() called, but claw is not installed!");
         }
     }
@@ -224,10 +224,10 @@ public class DeprecatedUtil {
          * @param backRight Back right motor power.
          * **/
         public void setDrivetrainPowers(double frontLeft, double frontRight, double backLeft, double backRight) {
-            this.frontLeft.setPower(AutoUtil.clamp(frontLeft, -1, 1));
-            this.frontRight.setPower(AutoUtil.clamp(frontRight, -1, 1));
-            this.backLeft.setPower(AutoUtil.clamp(backLeft, -1, 1));
-            this.backRight.setPower(AutoUtil.clamp(backRight, -1, 1));
+            this.frontLeft.setPower(AutoUtil.clamp(frontLeft, -1., 1.));
+            this.frontRight.setPower(AutoUtil.clamp(frontRight, -1., 1.));
+            this.backLeft.setPower(AutoUtil.clamp(backLeft, -1., 1.));
+            this.backRight.setPower(AutoUtil.clamp(backRight, -1., 1.));
         }
 
         /**

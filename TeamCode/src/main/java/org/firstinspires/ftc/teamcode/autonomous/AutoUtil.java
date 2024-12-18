@@ -5,6 +5,7 @@ import androidx.annotation.Nullable;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.RobotLog;
@@ -193,6 +194,10 @@ public class AutoUtil {
             this.frontRight = map.get(DcMotor.class, GlobalConstants.FRONT_RIGHT_MOTOR_NAME);
             this.backLeft = map.get(DcMotor.class, GlobalConstants.BACK_LEFT_MOTOR_NAME);
             this.backRight = map.get(DcMotor.class, GlobalConstants.BACK_RIGHT_MOTOR_NAME);
+
+            this.frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+            this.backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+            this.backRight.setDirection(DcMotorSimple.Direction.REVERSE);
         }
 
         public void setPowers(double frontLeft, double frontRight, double backLeft, double backRight) {
@@ -304,13 +309,6 @@ public class AutoUtil {
     }
 
     /**
-     * Clamps in to the range [lower, upper].
-     * **/
-    public static double clamp(double in, double lower, double upper) {
-        return Math.min(Math.max(in, lower), upper);
-    }
-
-    /**
      * Gets an input from AutoUtil.opMode.gamepad1.
      * @param input The input to measure.
      * @return The raw value if the input is a double, or value ? 1.0 : 0.0 if the value is a boolean.
@@ -378,5 +376,15 @@ public class AutoUtil {
             oneFound = true;
         }
         return true;
+    }
+
+    /**
+     * Clamps the input to be greater than lower and less than upper.
+     * Specifically, if input.compareTo(upper) > 0, upper is returned, and if input.compareTo(lower) < 0, lower is returned.
+     * **/
+    public static <T extends Comparable<T>> T clamp(T input, T lower, T upper) {
+        if (input.compareTo(upper) > 0) return upper;
+        if (input.compareTo(lower) < 0) return lower;
+        return input;
     }
 }

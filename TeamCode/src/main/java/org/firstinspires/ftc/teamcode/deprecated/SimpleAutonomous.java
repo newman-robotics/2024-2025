@@ -1,9 +1,11 @@
-package org.firstinspires.ftc.teamcode.autonomous;
+package org.firstinspires.ftc.teamcode.deprecated;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.RobotLog;
 
+import org.firstinspires.ftc.teamcode.autonomous.AutoUtil;
+import org.firstinspires.ftc.teamcode.autonomous.GlobalConstants;
 import org.firstinspires.ftc.teamcode.deprecated.DeprecatedUtil;
 
 @Autonomous(name = "SimpleAutonomous")
