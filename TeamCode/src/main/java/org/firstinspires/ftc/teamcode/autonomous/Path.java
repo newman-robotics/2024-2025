@@ -78,7 +78,7 @@ public class Path {
                     .add("Target Y position", yTarget)
                     .update();
 
-            AutoUtil.Drivetrain.assertAndGet().setPowers(0.2, 0., 0.);
+            AutoUtil.Drivetrain.assertAndGet().setPowers(0., -0.2, 0.);
         } while (xTarget != xReading && yTarget != yReading);
 
         ++this.stage;

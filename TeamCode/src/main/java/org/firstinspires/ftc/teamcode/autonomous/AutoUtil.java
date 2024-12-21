@@ -210,6 +210,7 @@ public class AutoUtil {
             this.backRight.setPower(backRight);
         }
 
+        //note: x is lateral, y is axial, ignore the constants
         public void setPowers(double x, double y, double theta) {
             this.setPowers(
                     x + y + theta,
@@ -238,13 +239,13 @@ public class AutoUtil {
 
     public static class ToggleSwitch {
         private boolean state = false;
-        private int ticks = 0;
+        private long lastToggleTime = System.currentTimeMillis();
 
         public void update(boolean toggle) {
-            if (this.ticks == 0) {
+            if (System.currentTimeMillis() > this.lastToggleTime + GlobalConstants.TOGGLE_SWITCH_COOLDOWN_MS) {
                 this.state = toggle != this.state;
-                this.ticks = 5;
-            } else --this.ticks;
+                this.lastToggleTime = System.currentTimeMillis();
+            }
         }
 
         public boolean getState() {

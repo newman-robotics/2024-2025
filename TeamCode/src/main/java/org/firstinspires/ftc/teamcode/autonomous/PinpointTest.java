@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.autonomous;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.RobotLog;
 
@@ -13,6 +14,7 @@ import org.firstinspires.ftc.teamcode.external.GoBildaPinpointDriver;
 
 import java.util.concurrent.atomic.AtomicReference;
 
+@Disabled
 @Autonomous(name="PinpointTest")
 public class PinpointTest extends LinearOpMode {
     public static GoBildaPinpointDriver odometry;
