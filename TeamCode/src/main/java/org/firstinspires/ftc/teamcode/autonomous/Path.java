@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.RobotLog;
 
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.external.GoBildaPinpointDriver;
 
 import java.util.ArrayList;
@@ -32,13 +33,14 @@ public class Path {
             return;
         }
 
-        double headingReading, headingTarget;
+        double headingTarget = Math.round(this.headings.get(this.stage) * Math.pow(10, GlobalConstants.AUTONOMOUS_ACCURACY_DIGITS));
+
+        double headingReading;
 
         do {
-            headingReading = Math.round(this.odometry.getHeading() * Math.pow(10, GlobalConstants.AUTONOMOUS_ACCURACY_DIGITS));
-            headingTarget = Math.round(this.headings.get(this.stage) * Math.pow(10, GlobalConstants.AUTONOMOUS_ACCURACY_DIGITS));
-
             if (parent.isStopRequested()) return;
+
+            headingReading = Math.round(this.odometry.getHeading() * Math.pow(10, GlobalConstants.AUTONOMOUS_ACCURACY_DIGITS));
 
             this.odometry.update();
 
@@ -54,6 +56,30 @@ public class Path {
 
             //RobotLog.i("{Stage=" + this.getStage() + ", TotalStages=" + this.headings.size() + ", Heading=" + this.odometry.getHeading() + ", TargetHeading=" + this.headings.get(this.stage) + "}");
         } while (headingReading != headingTarget);
+
+        double xTarget = Math.round(this.odometryTargets.get(this.stage).x * Math.pow(10, GlobalConstants.AUTONOMOUS_ACCURACY_DIGITS));
+        double yTarget = Math.round(this.odometryTargets.get(this.stage).y * Math.pow(10, GlobalConstants.AUTONOMOUS_ACCURACY_DIGITS));
+        double xReading, yReading;
+
+        do {
+            if (parent.isStopRequested()) return;
+
+            xReading = DistanceUnit.INCH.fromMm(this.odometry.getPosX());
+            yReading = DistanceUnit.INCH.fromMm(this.odometry.getPosY());
+
+            this.odometry.update();
+
+            AutoUtil.ChainTelemetry.assertAndGet()
+                    .add("Stage", this.getStage())
+                    .add("Total stages", this.headings.size())
+                    .add("X position", xReading)
+                    .add("Y position", yReading)
+                    .add("Target X position", xTarget)
+                    .add("Target Y position", yTarget)
+                    .update();
+
+            AutoUtil.Drivetrain.assertAndGet().setPowers(0.2, 0., 0.);
+        } while (xTarget != xReading && yTarget != yReading);
 
         ++this.stage;
     }
@@ -82,6 +108,9 @@ public class Path {
 
         public Path build() {
             List<Double> headings = new ArrayList<>();
+
+            headings.add(Math.atan2(this.positions.get(0).y, this.positions.get(0).x));
+            RobotLog.i("added first heading " + headings.get(0));
 
             for (int i = 0; i < this.positions.size() - 1; ++i) {
                 double rise = this.positions.get(i + 1).y - this.positions.get(i).y;

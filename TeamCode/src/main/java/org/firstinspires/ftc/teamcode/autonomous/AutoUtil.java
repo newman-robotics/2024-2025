@@ -51,6 +51,7 @@ public class AutoUtil {
             return this.counts;
         }
 
+        @NonNull
         @Override
         public String toString() {
             return "Counter(" + this.counts + ")";
@@ -189,7 +190,7 @@ public class AutoUtil {
         private final DcMotor backLeft;
         private final DcMotor backRight;
 
-        private boolean gamepadSlow = false;
+        private final AutoUtil.ToggleSwitch gamepadSlow = new AutoUtil.ToggleSwitch();
 
         private Drivetrain(HardwareMap map) {
             this.frontLeft = map.get(DcMotor.class, GlobalConstants.FRONT_LEFT_MOTOR_NAME);
@@ -223,15 +224,31 @@ public class AutoUtil {
             double lateral = parseGamepadInputAsDouble(GlobalConstants.LATERAL);
             double yaw = parseGamepadInputAsDouble(GlobalConstants.YAW);
 
-            this.gamepadSlow = parseGamepadInputAsBoolean(GlobalConstants.SLOW) != this.gamepadSlow;
+            this.gamepadSlow.update(parseGamepadInputAsBoolean(GlobalConstants.SLOW));
 
-            if (this.gamepadSlow) {
+            if (this.gamepadSlow.getState()) {
                 axial *= GlobalConstants.SLOW_FACTOR;
                 lateral *= GlobalConstants.SLOW_FACTOR;
                 yaw *= GlobalConstants.SLOW_FACTOR;
             }
 
             this.setPowers(axial, lateral, yaw);
+        }
+    }
+
+    public static class ToggleSwitch {
+        private boolean state = false;
+        private int ticks = 0;
+
+        public void update(boolean toggle) {
+            if (this.ticks == 0) {
+                this.state = toggle != this.state;
+                this.ticks = 5;
+            } else --this.ticks;
+        }
+
+        public boolean getState() {
+            return this.state;
         }
     }
 

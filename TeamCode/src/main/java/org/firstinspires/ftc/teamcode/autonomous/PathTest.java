@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.autonomous;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.teamcode.external.GoBildaPinpointDriver;
@@ -20,10 +21,11 @@ public class PathTest extends LinearOpMode {
 
         AutoUtil.Drivetrain.initAndGet(this.hardwareMap);
         GoBildaPinpointDriver odometry = this.hardwareMap.get(GoBildaPinpointDriver.class, GlobalConstants.ODOMETRY_NAME);
+        odometry.resetPosAndIMU();
 
         this.path = new Path.Builder(odometry)
                 .andThen(new CameraHandler.FieldPos(36, 72, 0))
-                .andThen(new CameraHandler.FieldPos(36, 108, 180))
+                //.andThen(new CameraHandler.FieldPos(36, 108, 180))
                 .build();
 
         this.waitForStart();
