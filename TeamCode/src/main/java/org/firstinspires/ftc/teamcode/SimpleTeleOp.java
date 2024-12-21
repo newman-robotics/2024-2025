@@ -19,6 +19,7 @@ public class SimpleTeleOp extends LinearOpMode {
     private long initTime;
 
     private boolean clawIsOpen;
+    private boolean slow;
 
     private void initHardware() {
         this.drivetrain = AutoUtil.Drivetrain.initAndGet(this.hardwareMap);
@@ -46,23 +47,21 @@ public class SimpleTeleOp extends LinearOpMode {
         this.drivetrain.setFromGamepad();
 
         double actuator = AutoUtil.ternaryXOR(AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.INPUT_ACTUATOR_UP), AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.INPUT_ACTUATOR_DOWN));
-        int elbow = (int)AutoUtil.ternaryXOR(AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.INPUT_ELBOW_UP), AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.INPUT_ELBOW_DOWN));
+        double elbow = AutoUtil.ternaryXOR(AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.INPUT_ELBOW_UP), AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.INPUT_ELBOW_DOWN));
         double linearSlide = AutoUtil.ternaryXOR(AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.INPUT_LINEAR_SLIDE_UP), AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.INPUT_LINEAR_SLIDE_DOWN));
-        boolean claw = AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.INPUT_CLAW);
+        this.clawIsOpen = AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.INPUT_CLAW) != this.clawIsOpen;
 
         if (AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.SLOW)) {
             actuator *= GlobalConstants.SLOW_FACTOR;
             linearSlide *= GlobalConstants.SLOW_FACTOR;
 
-            elbow *= (GlobalConstants.ARM_ELBOW_TICK_MODIFIER * GlobalConstants.SLOW_FACTOR);
+            elbow *= GlobalConstants.ARM_ELBOW_TICK_MODIFIER * GlobalConstants.SLOW_FACTOR;
         } else elbow *= GlobalConstants.ARM_ELBOW_TICK_MODIFIER;
-
-        if (claw) this.clawIsOpen = !this.clawIsOpen;
 
         elbow += AutoUtil.clamp(this.elbow.getTargetPosition(), GlobalConstants.ELBOW_TICK_LOWER_BOUND, GlobalConstants.ELBOW_TICK_UPPER_BOUND);
 
         this.actuator.setPower(actuator);
-        this.elbow.setTargetPosition(elbow);
+        this.elbow.setTargetPosition((int)Math.ceil(elbow));
         this.linearSlide.setPower(linearSlide / 1.5);
         this.claw.setPosition(this.clawIsOpen ? 1. : 0.);
 

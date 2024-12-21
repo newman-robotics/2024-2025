@@ -2,20 +2,40 @@ package org.firstinspires.ftc.teamcode.autonomous;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.teamcode.external.GoBildaPinpointDriver;
 
 @Autonomous
 public class PathTest extends LinearOpMode {
+    Path path;
+
+    private void report() {
+
+    }
+
     @Override
     public void runOpMode() throws InterruptedException {
-        //set this up in the future
-        AutoUtil.Drivetrain drivetrain = null;
-        GoBildaPinpointDriver odometry = null;
+        AutoUtil.ChainTelemetry.init(this.telemetry);
 
-        Path path = new Path.Builder(drivetrain, odometry)
+        AutoUtil.Drivetrain.initAndGet(this.hardwareMap);
+        GoBildaPinpointDriver odometry = this.hardwareMap.get(GoBildaPinpointDriver.class, GlobalConstants.ODOMETRY_NAME);
+
+        this.path = new Path.Builder(odometry)
                 .andThen(new CameraHandler.FieldPos(36, 72, 0))
                 .andThen(new CameraHandler.FieldPos(36, 108, 180))
                 .build();
+
+        this.waitForStart();
+
+        while (!this.path.isDone()) {
+            if (this.isStopRequested()) {
+                RobotLog.i("prematurely stopped!");
+                break;
+            }
+            this.path.runNextStage(this);
+        }
+
+        RobotLog.i("done! (runOpMode)");
     }
 }

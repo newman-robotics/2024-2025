@@ -13,7 +13,8 @@ import org.firstinspires.ftc.teamcode.autonomous.AutoUtil;
 import org.firstinspires.ftc.teamcode.autonomous.GlobalConstants;
 
 
-@TeleOp(name="The Tele Operation")
+@Disabled
+@TeleOp(name="STele")
 public class NewArmNonPresetTeleOp extends LinearOpMode {
 
     // Declare OpMode members for each of the 4 motors.

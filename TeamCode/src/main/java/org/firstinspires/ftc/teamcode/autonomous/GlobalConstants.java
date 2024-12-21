@@ -91,7 +91,7 @@ public class GlobalConstants {
     public static final double GAMEPAD_THRESHOLD = 0.7;
 
     //the slow factor is multiplied by all the motor values when the slow factor is activated, slowing the robot
-    public static final double SLOW_FACTOR = 0.125;
+    public static final double SLOW_FACTOR = 0.15;
 
     //creates an input and sets that input to one of the controller button
     //this is used in a switch case that determines the power set to a motor
@@ -175,4 +175,6 @@ public class GlobalConstants {
 
     public static final int SIMPLE_STARTING_POS_X = 12;
     public static final int SIMPLE_STARTING_POS_Y = 36;
+
+    public static final int AUTONOMOUS_ACCURACY_DIGITS = 2;
 }

@@ -189,6 +189,8 @@ public class AutoUtil {
         private final DcMotor backLeft;
         private final DcMotor backRight;
 
+        private boolean gamepadSlow = false;
+
         private Drivetrain(HardwareMap map) {
             this.frontLeft = map.get(DcMotor.class, GlobalConstants.FRONT_LEFT_MOTOR_NAME);
             this.frontRight = map.get(DcMotor.class, GlobalConstants.FRONT_RIGHT_MOTOR_NAME);
@@ -207,23 +209,29 @@ public class AutoUtil {
             this.backRight.setPower(backRight);
         }
 
+        public void setPowers(double x, double y, double theta) {
+            this.setPowers(
+                    x + y + theta,
+                    x - y - theta,
+                    x - y + theta,
+                    x + y - theta
+            );
+        }
+
         public void setFromGamepad() {
             double axial = -parseGamepadInputAsDouble(GlobalConstants.AXIAL);
             double lateral = parseGamepadInputAsDouble(GlobalConstants.LATERAL);
             double yaw = parseGamepadInputAsDouble(GlobalConstants.YAW);
 
-            if (parseGamepadInputAsBoolean(GlobalConstants.SLOW)) {
+            this.gamepadSlow = parseGamepadInputAsBoolean(GlobalConstants.SLOW) != this.gamepadSlow;
+
+            if (this.gamepadSlow) {
                 axial *= GlobalConstants.SLOW_FACTOR;
                 lateral *= GlobalConstants.SLOW_FACTOR;
                 yaw *= GlobalConstants.SLOW_FACTOR;
             }
 
-            this.setPowers(
-                    axial + lateral + yaw,
-                    axial - lateral - yaw,
-                    axial - lateral + yaw,
-                    axial + lateral - yaw
-            );
+            this.setPowers(axial, lateral, yaw);
         }
     }
 
