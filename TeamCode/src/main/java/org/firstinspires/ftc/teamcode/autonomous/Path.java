@@ -13,11 +13,12 @@ public class Path {
     //The headings to set the odometry to *before* moving to the target.
     private final List<Double> headings;
     //The odometry targets. We move to the point first and then rotate to the desired heading.
-    private final List<CameraHandler.FieldPos> odometryTargets;
+    private final List<PathTarget> odometryTargets;
     private final GoBildaPinpointDriver odometry;
     private int stage = 0;
+    private int lastX = 0, lastY = 0;
 
-    Path(GoBildaPinpointDriver odometry, List<Double> headings, List<CameraHandler.FieldPos> odometryTargets) {
+    Path(GoBildaPinpointDriver odometry, List<Double> headings, List<PathTarget> odometryTargets) {
         this.odometry = odometry;
         this.headings = headings;
         this.odometryTargets = odometryTargets;
@@ -27,8 +28,10 @@ public class Path {
         return this.stage >= this.headings.size();
     }
 
+    //maybe (probably) not necessary
     private static double error(double input) {
-        return Math.round(input * (1 << GlobalConstants.AUTONOMOUS_ACCURACY_BITS));
+        return input;
+        //return Math.round(input * (1 << GlobalConstants.AUTONOMOUS_ACCURACY_BITS));
     }
 
     public void runNextStage(LinearOpMode parent) {
@@ -58,31 +61,36 @@ public class Path {
             else if (headingReading < headingTarget) AutoUtil.Drivetrain.assertAndGet().setPowers(0, 0, -0.2);
         } while (headingReading != headingTarget);
 
-        double xTarget = Path.error(this.odometryTargets.get(this.stage).x);
-        double yTarget = Path.error(this.odometryTargets.get(this.stage).y);
-        double xReading, yReading;
+        double distanceTarget = Path.error(this.odometryTargets.get(this.stage).angle);
+        double distanceReading;
+        int tempLastX, tempLastY;
 
         do {
             if (parent.isStopRequested()) return;
 
-            xReading = Path.error(DistanceUnit.INCH.fromMm(this.odometry.getPosX()));
-            yReading = Path.error(DistanceUnit.INCH.fromMm(this.odometry.getPosY()));
+            int x = (int)DistanceUnit.INCH.fromMm(this.odometry.getPosX()) - this.lastX;
+            int y = (int)DistanceUnit.INCH.fromMm(this.odometry.getPosY()) - this.lastY;
+            distanceReading = Path.error(x * x + y * y);
 
             this.odometry.update();
 
             AutoUtil.ChainTelemetry.assertAndGet()
                     .add("Stage", this.getStage())
                     .add("Total stages", this.headings.size())
-                    .add("X position", xReading)
-                    .add("Y position", yReading)
-                    .add("Target X position", xTarget)
-                    .add("Target Y position", yTarget)
+                    .add("Distance from last pos", distanceReading)
+                    .add("Target distance from last pos", distanceTarget)
                     .update();
 
             AutoUtil.Drivetrain.assertAndGet().setPowers(0., -0.2, 0.);
-        } while (xReading != xTarget || yReading != yTarget);
 
-        headingTarget = Path.error(this.odometryTargets.get(this.stage).theta);
+            tempLastX = x;
+            tempLastY = y;
+        } while (distanceReading != distanceTarget);
+
+        this.lastX = tempLastX;
+        this.lastY = tempLastY;
+
+        headingTarget = Path.error(this.odometryTargets.get(this.stage).angle);
 
         do {
             if (parent.isStopRequested()) return;
@@ -106,6 +114,16 @@ public class Path {
 
     public int getStage() {
         return this.stage;
+    }
+
+    private static class PathTarget {
+        public final double distance;
+        public final double angle;
+
+        public PathTarget(double distance, double angle) {
+            this.distance = distance;
+            this.angle = angle;
+        }
     }
 
     public static class Builder {
@@ -141,7 +159,12 @@ public class Path {
                 RobotLog.i("added heading " + heading);
             }
 
-            return new Path(this.odometry, headings, this.positions);
+            List<PathTarget> targets = new ArrayList<>();
+            for (CameraHandler.FieldPos pos : this.positions) {
+                targets.add(new PathTarget(pos.x * pos.x + pos.y * pos.y, pos.theta));
+            }
+
+            return new Path(this.odometry, headings, targets);
         }
     }
 }
