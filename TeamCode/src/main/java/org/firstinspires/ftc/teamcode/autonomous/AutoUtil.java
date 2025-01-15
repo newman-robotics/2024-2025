@@ -198,6 +198,11 @@ public class AutoUtil {
             this.backLeft = map.get(DcMotor.class, GlobalConstants.BACK_LEFT_MOTOR_NAME);
             this.backRight = map.get(DcMotor.class, GlobalConstants.BACK_RIGHT_MOTOR_NAME);
 
+            this.frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            this.frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            this.backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            this.backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
             this.frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
             this.backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
             this.backRight.setDirection(DcMotorSimple.Direction.REVERSE);

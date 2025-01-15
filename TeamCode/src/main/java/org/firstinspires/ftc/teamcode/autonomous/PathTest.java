@@ -18,14 +18,17 @@ public class PathTest extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         AutoUtil.ChainTelemetry.init(this.telemetry);
-
         AutoUtil.Drivetrain.initAndGet(this.hardwareMap);
+
         GoBildaPinpointDriver odometry = this.hardwareMap.get(GoBildaPinpointDriver.class, GlobalConstants.ODOMETRY_NAME);
         odometry.resetPosAndIMU();
 
         this.path = new Path.Builder(odometry)
-                .andThen(new CameraHandler.FieldPos(36, 72, 0))
-                //.andThen(new CameraHandler.FieldPos(36, 108, 180))
+                .andThen(new CameraHandler.FieldPos(12, -48, Double.NaN))
+                .andThen(new CameraHandler.FieldPos(108, -48, Double.NaN))
+                .andThen(new CameraHandler.FieldPos(108, 48, Double.NaN))
+                .andThen(new CameraHandler.FieldPos(12, 48, Double.NaN))
+                .andThen(new CameraHandler.FieldPos(0, 0, 0))
                 .build();
 
         this.waitForStart();

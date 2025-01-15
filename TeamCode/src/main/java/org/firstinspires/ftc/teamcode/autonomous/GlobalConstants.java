@@ -14,6 +14,7 @@ Expansion hub (Motors): port 3 = elevation
 * */
 
 // making a class with all the control parts and there names n stuff
+// the majority of these are redundant
 public class GlobalConstants {
     //These are the buttons on the controllers
     public enum GamepadInput {

@@ -34,7 +34,6 @@ public class Path {
         }
 
         double headingTarget = Math.round(this.headings.get(this.stage) * Math.pow(10, GlobalConstants.AUTONOMOUS_ACCURACY_DIGITS));
-
         double headingReading;
 
         do {
@@ -64,8 +63,8 @@ public class Path {
         do {
             if (parent.isStopRequested()) return;
 
-            xReading = DistanceUnit.INCH.fromMm(this.odometry.getPosX());
-            yReading = DistanceUnit.INCH.fromMm(this.odometry.getPosY());
+            xReading = Math.round(DistanceUnit.INCH.fromMm(this.odometry.getPosX()) * Math.pow(10, GlobalConstants.AUTONOMOUS_ACCURACY_DIGITS));
+            yReading = Math.round(DistanceUnit.INCH.fromMm(this.odometry.getPosY()) * Math.pow(10, GlobalConstants.AUTONOMOUS_ACCURACY_DIGITS));
 
             this.odometry.update();
 
@@ -78,8 +77,35 @@ public class Path {
                     .add("Target Y position", yTarget)
                     .update();
 
-            AutoUtil.Drivetrain.assertAndGet().setPowers(0., -0.2, 0.);
+            AutoUtil.Drivetrain.assertAndGet().setPowers(0., 0.2, 0.);
         } while (xTarget != xReading && yTarget != yReading);
+
+        double theta = this.odometryTargets.get(this.stage).theta;
+        if (!Double.isNaN(theta)) {
+            headingTarget = Math.round(theta * Math.pow(10, GlobalConstants.AUTONOMOUS_ACCURACY_DIGITS));
+
+            do {
+                if (parent.isStopRequested()) return;
+
+                headingReading = Math.round(this.odometry.getHeading() * Math.pow(10, GlobalConstants.AUTONOMOUS_ACCURACY_DIGITS));
+
+                this.odometry.update();
+
+                AutoUtil.ChainTelemetry.assertAndGet()
+                        .add("Stage", this.getStage())
+                        .add("Total stages", this.headings.size())
+                        .add("Heading", headingReading)
+                        .add("Target heading", headingTarget)
+                        .update();
+
+                if (headingReading > headingTarget)
+                    AutoUtil.Drivetrain.assertAndGet().setPowers(0, 0, 0.2);
+                else if (headingReading < headingTarget)
+                    AutoUtil.Drivetrain.assertAndGet().setPowers(0, 0, -0.2);
+
+                //RobotLog.i("{Stage=" + this.getStage() + ", TotalStages=" + this.headings.size() + ", Heading=" + this.odometry.getHeading() + ", TargetHeading=" + this.headings.get(this.stage) + "}");
+            } while (headingReading != headingTarget);
+        }
 
         ++this.stage;
     }
@@ -98,8 +124,9 @@ public class Path {
         }
 
         /**
-         * Target is in coordinates relative to where the
-         * odometer starts
+         * Target is in coordinates relative to where the odometer starts.
+         * +X is forwards, +Y is right, theta is in radians
+         * If theta is Double.NaN, it is ignored
          * **/
         public Builder andThen(CameraHandler.FieldPos target) {
             this.positions.add(target);

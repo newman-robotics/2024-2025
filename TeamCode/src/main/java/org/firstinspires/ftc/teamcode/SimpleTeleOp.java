@@ -16,8 +16,6 @@ public class SimpleTeleOp extends LinearOpMode {
     private DcMotor linearSlide;
     private Servo claw;
 
-    private long initTime;
-
     private final AutoUtil.ToggleSwitch clawState = new AutoUtil.ToggleSwitch();
     private final AutoUtil.ToggleSwitch slow = new AutoUtil.ToggleSwitch();
 
@@ -35,18 +33,9 @@ public class SimpleTeleOp extends LinearOpMode {
         this.elbow.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
-    private void report() {
-        AutoUtil.ChainTelemetry.assertAndGet()
-                .add("Runtime", System.currentTimeMillis() - this.initTime)
-                .add("Elbow ticks", this.elbow.getCurrentPosition())
-                .add("Elbow target", this.elbow.getTargetPosition())
-                .update();
-    }
-
     private void tick() {
         this.drivetrain.setFromGamepad();
 
-        //double actuator = AutoUtil.ternaryXOR(AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.INPUT_ACTUATOR_UP), AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.INPUT_ACTUATOR_DOWN));
         double elbow = AutoUtil.ternaryXOR(AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.INPUT_ELBOW_UP), AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.INPUT_ELBOW_DOWN));
         double linearSlide = AutoUtil.ternaryXOR(AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.INPUT_LINEAR_SLIDE_UP), AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.INPUT_LINEAR_SLIDE_DOWN));
 
@@ -54,7 +43,6 @@ public class SimpleTeleOp extends LinearOpMode {
         this.slow.update(AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.SLOW));
 
         if (this.slow.getState()) {
-            //actuator *= GlobalConstants.SLOW_FACTOR;
             linearSlide *= GlobalConstants.SLOW_FACTOR;
 
             elbow *= GlobalConstants.ARM_ELBOW_TICK_MODIFIER * GlobalConstants.SLOW_FACTOR;
@@ -62,23 +50,18 @@ public class SimpleTeleOp extends LinearOpMode {
 
         elbow += AutoUtil.clamp(this.elbow.getTargetPosition(), GlobalConstants.ELBOW_TICK_LOWER_BOUND, GlobalConstants.ELBOW_TICK_UPPER_BOUND);
 
-        //this.actuator.setPower(actuator);
         this.elbow.setTargetPosition((int)Math.ceil(elbow));
         this.linearSlide.setPower(linearSlide / 1.5);
         this.claw.setPosition(this.clawState.getState() ? 1. : 0.);
-
-        this.report();
     }
 
     public void runOpMode() {
-        this.initTime = System.currentTimeMillis();
-
         AutoUtil.setOpMode(this);
         AutoUtil.ChainTelemetry.init(this.telemetry);
 
-        this.initHardware();
+        while (this.opModeInInit());
 
-        while (this.opModeInInit()) this.report();
+        this.initHardware();
 
         while (this.opModeIsActive()) this.tick();
 
