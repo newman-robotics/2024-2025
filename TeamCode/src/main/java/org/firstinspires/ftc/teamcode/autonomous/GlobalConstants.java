@@ -176,6 +176,6 @@ public class GlobalConstants {
     public static final int SIMPLE_STARTING_POS_X = 12;
     public static final int SIMPLE_STARTING_POS_Y = 36;
 
-    public static final int AUTONOMOUS_ACCURACY_DIGITS = 2;
+    public static final int AUTONOMOUS_ACCURACY_BITS = 2;
     public static final int TOGGLE_SWITCH_COOLDOWN_MS = 10;
 }

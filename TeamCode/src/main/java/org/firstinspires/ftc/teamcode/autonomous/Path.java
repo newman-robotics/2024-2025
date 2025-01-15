@@ -27,20 +27,23 @@ public class Path {
         return this.stage >= this.headings.size();
     }
 
+    private static double error(double input) {
+        return Math.round(input * (1 << GlobalConstants.AUTONOMOUS_ACCURACY_BITS));
+    }
+
     public void runNextStage(LinearOpMode parent) {
         if (this.isDone()) {
             RobotLog.i("done! (runNextStage)");
             return;
         }
 
-        double headingTarget = Math.round(this.headings.get(this.stage) * Math.pow(10, GlobalConstants.AUTONOMOUS_ACCURACY_DIGITS));
-
+        double headingTarget = Path.error(this.headings.get(this.stage));
         double headingReading;
 
         do {
             if (parent.isStopRequested()) return;
 
-            headingReading = Math.round(this.odometry.getHeading() * Math.pow(10, GlobalConstants.AUTONOMOUS_ACCURACY_DIGITS));
+            headingReading = Path.error(this.odometry.getHeading());
 
             this.odometry.update();
 
@@ -53,19 +56,17 @@ public class Path {
 
             if (headingReading > headingTarget) AutoUtil.Drivetrain.assertAndGet().setPowers(0, 0, 0.2);
             else if (headingReading < headingTarget) AutoUtil.Drivetrain.assertAndGet().setPowers(0, 0, -0.2);
-
-            //RobotLog.i("{Stage=" + this.getStage() + ", TotalStages=" + this.headings.size() + ", Heading=" + this.odometry.getHeading() + ", TargetHeading=" + this.headings.get(this.stage) + "}");
         } while (headingReading != headingTarget);
 
-        double xTarget = Math.round(this.odometryTargets.get(this.stage).x * Math.pow(10, GlobalConstants.AUTONOMOUS_ACCURACY_DIGITS));
-        double yTarget = Math.round(this.odometryTargets.get(this.stage).y * Math.pow(10, GlobalConstants.AUTONOMOUS_ACCURACY_DIGITS));
+        double xTarget = Path.error(this.odometryTargets.get(this.stage).x);
+        double yTarget = Path.error(this.odometryTargets.get(this.stage).y);
         double xReading, yReading;
 
         do {
             if (parent.isStopRequested()) return;
 
-            xReading = DistanceUnit.INCH.fromMm(this.odometry.getPosX());
-            yReading = DistanceUnit.INCH.fromMm(this.odometry.getPosY());
+            xReading = Path.error(DistanceUnit.INCH.fromMm(this.odometry.getPosX()));
+            yReading = Path.error(DistanceUnit.INCH.fromMm(this.odometry.getPosY()));
 
             this.odometry.update();
 
@@ -79,7 +80,26 @@ public class Path {
                     .update();
 
             AutoUtil.Drivetrain.assertAndGet().setPowers(0., -0.2, 0.);
-        } while (xTarget != xReading && yTarget != yReading);
+        } while (xReading != xTarget || yReading != yTarget);
+
+        headingTarget = Path.error(this.odometryTargets.get(this.stage).theta);
+
+        do {
+            if (parent.isStopRequested()) return;
+
+            headingReading = Path.error(this.odometry.getHeading());
+
+            this.odometry.update();
+
+            AutoUtil.ChainTelemetry.assertAndGet()
+                    .add("Stage", this.getStage())
+                    .add("Total stages", this.headings.size())
+                    .add("Heading", headingReading)
+                    .add("Target heading", headingTarget)
+                    .update();
+
+            AutoUtil.Drivetrain.assertAndGet().setPowers(0, 0, headingReading > headingTarget ? 0.2 : (headingReading < headingTarget ? -0.2 : 0));
+        } while (headingReading != headingTarget);
 
         ++this.stage;
     }
