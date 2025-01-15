@@ -35,7 +35,7 @@ public class PathTest extends LinearOpMode {
 
         while (!this.path.isDone()) {
             if (this.isStopRequested()) {
-                RobotLog.i("prematurely stopped!");
+                RobotLog.e("prematurely stopped!");
                 break;
             }
             this.path.runNextStage(this);

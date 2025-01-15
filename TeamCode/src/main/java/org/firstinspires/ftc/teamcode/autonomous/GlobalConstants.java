@@ -168,8 +168,8 @@ public class GlobalConstants {
     public static final GamepadInput INPUT_ELBOW_UP = GamepadInput.RIGHT_TRIGGER; //Used to be RIGHT_BUMPER
     public static final GamepadInput INPUT_ELBOW_DOWN = GamepadInput.LEFT_TRIGGER; //Used to be RIGHT_TRIGGER
     public static final GamepadInput INPUT_LINEAR_SLIDE_UP = GamepadInput.LEFT_BUMPER; //Used to be LEFT_BUMPER
-    public static final GamepadInput INPUT_LINEAR_SLIDE_DOWN = GamepadInput.RIGHT_BUMPER; //Used to be LEFT_TRIGGER
-    public static final GamepadInput INPUT_CLAW = GamepadInput.BUTTON_Y;
+    public static final GamepadInput INPUT_LINEAR_SLIDE_DOWN = GamepadInput.RIGHT_BUMPER; //Used to be LEFT_TRIGGER LEFT_TRIGGER
+    public static final GamepadInput INPUT_CLAW = GamepadInput.LEFT_STICK_BUTTON; //Used to be BUTTON_Y
 
     public static final int ELBOW_TICK_LOWER_BOUND = 20;
     public static final int ELBOW_TICK_UPPER_BOUND = 500;
@@ -177,6 +177,6 @@ public class GlobalConstants {
     public static final int SIMPLE_STARTING_POS_X = 12;
     public static final int SIMPLE_STARTING_POS_Y = 36;
 
-    public static final int AUTONOMOUS_ACCURACY_DIGITS = 2;
-    public static final int TOGGLE_SWITCH_COOLDOWN_MS = 10;
+    public static final int AUTONOMOUS_ACCURACY_BITS = 2;
+    public static final int TOGGLE_SWITCH_COOLDOWN_MS = 50;
 }

@@ -13,11 +13,12 @@ public class Path {
     //The headings to set the odometry to *before* moving to the target.
     private final List<Double> headings;
     //The odometry targets. We move to the point first and then rotate to the desired heading.
-    private final List<CameraHandler.FieldPos> odometryTargets;
+    private final List<PathTarget> odometryTargets;
     private final GoBildaPinpointDriver odometry;
     private int stage = 0;
+    private int lastX = 0, lastY = 0;
 
-    Path(GoBildaPinpointDriver odometry, List<Double> headings, List<CameraHandler.FieldPos> odometryTargets) {
+    Path(GoBildaPinpointDriver odometry, List<Double> headings, List<PathTarget> odometryTargets) {
         this.odometry = odometry;
         this.headings = headings;
         this.odometryTargets = odometryTargets;
@@ -27,19 +28,25 @@ public class Path {
         return this.stage >= this.headings.size();
     }
 
+    //maybe (probably) not necessary
+    private static double error(double input) {
+        return input;
+        //return Math.round(input * (1 << GlobalConstants.AUTONOMOUS_ACCURACY_BITS));
+    }
+
     public void runNextStage(LinearOpMode parent) {
         if (this.isDone()) {
             RobotLog.i("done! (runNextStage)");
             return;
         }
 
-        double headingTarget = Math.round(this.headings.get(this.stage) * Math.pow(10, GlobalConstants.AUTONOMOUS_ACCURACY_DIGITS));
+        double headingTarget = Path.error(this.headings.get(this.stage));
         double headingReading;
 
         do {
             if (parent.isStopRequested()) return;
 
-            headingReading = Math.round(this.odometry.getHeading() * Math.pow(10, GlobalConstants.AUTONOMOUS_ACCURACY_DIGITS));
+            headingReading = Path.error(this.odometry.getHeading());
 
             this.odometry.update();
 
@@ -52,33 +59,55 @@ public class Path {
 
             if (headingReading > headingTarget) AutoUtil.Drivetrain.assertAndGet().setPowers(0, 0, 0.2);
             else if (headingReading < headingTarget) AutoUtil.Drivetrain.assertAndGet().setPowers(0, 0, -0.2);
-
-            //RobotLog.i("{Stage=" + this.getStage() + ", TotalStages=" + this.headings.size() + ", Heading=" + this.odometry.getHeading() + ", TargetHeading=" + this.headings.get(this.stage) + "}");
         } while (headingReading != headingTarget);
 
-        double xTarget = Math.round(this.odometryTargets.get(this.stage).x * Math.pow(10, GlobalConstants.AUTONOMOUS_ACCURACY_DIGITS));
-        double yTarget = Math.round(this.odometryTargets.get(this.stage).y * Math.pow(10, GlobalConstants.AUTONOMOUS_ACCURACY_DIGITS));
-        double xReading, yReading;
+        double distanceTarget = Path.error(this.odometryTargets.get(this.stage).angle);
+        double distanceReading;
+        int tempLastX, tempLastY;
 
         do {
             if (parent.isStopRequested()) return;
 
-            xReading = Math.round(DistanceUnit.INCH.fromMm(this.odometry.getPosX()) * Math.pow(10, GlobalConstants.AUTONOMOUS_ACCURACY_DIGITS));
-            yReading = Math.round(DistanceUnit.INCH.fromMm(this.odometry.getPosY()) * Math.pow(10, GlobalConstants.AUTONOMOUS_ACCURACY_DIGITS));
+            int x = (int)DistanceUnit.INCH.fromMm(this.odometry.getPosX()) - this.lastX;
+            int y = (int)DistanceUnit.INCH.fromMm(this.odometry.getPosY()) - this.lastY;
+            distanceReading = Path.error(x * x + y * y);
 
             this.odometry.update();
 
             AutoUtil.ChainTelemetry.assertAndGet()
                     .add("Stage", this.getStage())
                     .add("Total stages", this.headings.size())
-                    .add("X position", xReading)
-                    .add("Y position", yReading)
-                    .add("Target X position", xTarget)
-                    .add("Target Y position", yTarget)
+                    .add("Distance from last pos", distanceReading)
+                    .add("Target distance from last pos", distanceTarget)
                     .update();
 
-            AutoUtil.Drivetrain.assertAndGet().setPowers(0., 0.2, 0.);
-        } while (xTarget != xReading && yTarget != yReading);
+            AutoUtil.Drivetrain.assertAndGet().setPowers(0., -0.2, 0.);
+
+            tempLastX = x;
+            tempLastY = y;
+        } while (distanceReading != distanceTarget);
+
+        this.lastX = tempLastX;
+        this.lastY = tempLastY;
+
+        headingTarget = Path.error(this.odometryTargets.get(this.stage).angle);
+
+        do {
+            if (parent.isStopRequested()) return;
+
+            headingReading = Path.error(this.odometry.getHeading());
+
+            this.odometry.update();
+
+            AutoUtil.ChainTelemetry.assertAndGet()
+                    .add("Stage", this.getStage())
+                    .add("Total stages", this.headings.size())
+                    .add("Heading", headingReading)
+                    .add("Target heading", headingTarget)
+                    .update();
+
+            AutoUtil.Drivetrain.assertAndGet().setPowers(0, 0, headingReading > headingTarget ? 0.2 : (headingReading < headingTarget ? -0.2 : 0));
+        } while (headingReading != headingTarget);
 
         double theta = this.odometryTargets.get(this.stage).theta;
         if (!Double.isNaN(theta)) {
@@ -112,6 +141,16 @@ public class Path {
 
     public int getStage() {
         return this.stage;
+    }
+
+    private static class PathTarget {
+        public final double distance;
+        public final double angle;
+
+        public PathTarget(double distance, double angle) {
+            this.distance = distance;
+            this.angle = angle;
+        }
     }
 
     public static class Builder {
@@ -148,7 +187,12 @@ public class Path {
                 RobotLog.i("added heading " + heading);
             }
 
-            return new Path(this.odometry, headings, this.positions);
+            List<PathTarget> targets = new ArrayList<>();
+            for (CameraHandler.FieldPos pos : this.positions) {
+                targets.add(new PathTarget(pos.x * pos.x + pos.y * pos.y, pos.theta));
+            }
+
+            return new Path(this.odometry, headings, targets);
         }
     }
 }

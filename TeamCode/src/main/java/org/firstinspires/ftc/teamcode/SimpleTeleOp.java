@@ -50,7 +50,8 @@ public class SimpleTeleOp extends LinearOpMode {
 
         elbow += AutoUtil.clamp(this.elbow.getTargetPosition(), GlobalConstants.ELBOW_TICK_LOWER_BOUND, GlobalConstants.ELBOW_TICK_UPPER_BOUND);
 
-        this.elbow.setTargetPosition((int)Math.ceil(elbow));
+        //this.actuator.setPower(actuator);
+        this.elbow.setTargetPosition((int)Math.ceil((elbow * 0.8))); //Math.ceil rounds the number
         this.linearSlide.setPower(linearSlide / 1.5);
         this.claw.setPosition(this.clawState.getState() ? 1. : 0.);
     }
