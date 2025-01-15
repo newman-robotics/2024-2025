@@ -109,14 +109,14 @@ public class Path {
             AutoUtil.Drivetrain.assertAndGet().setPowers(0, 0, headingReading > headingTarget ? 0.2 : (headingReading < headingTarget ? -0.2 : 0));
         } while (headingReading != headingTarget);
 
-        double theta = this.odometryTargets.get(this.stage).theta;
+        double theta = this.odometryTargets.get(this.stage).angle;
         if (!Double.isNaN(theta)) {
-            headingTarget = Math.round(theta * Math.pow(10, GlobalConstants.AUTONOMOUS_ACCURACY_DIGITS));
+            headingTarget = Math.round(theta * Math.pow(10, GlobalConstants.AUTONOMOUS_ACCURACY_BITS));
 
             do {
                 if (parent.isStopRequested()) return;
 
-                headingReading = Math.round(this.odometry.getHeading() * Math.pow(10, GlobalConstants.AUTONOMOUS_ACCURACY_DIGITS));
+                headingReading = Math.round(this.odometry.getHeading() * Math.pow(10, GlobalConstants.AUTONOMOUS_ACCURACY_BITS));
 
                 this.odometry.update();
 
