@@ -21,8 +21,6 @@ public class SimpleTeleOp extends LinearOpMode {
     private DcMotor linearSlide;
     private Servo claw;
 
-    private long initTime;
-
     private final AutoUtil.ToggleSwitch clawState = new AutoUtil.ToggleSwitch();
     private final AutoUtil.ToggleSwitch slow = new AutoUtil.ToggleSwitch();
 
@@ -46,7 +44,7 @@ public class SimpleTeleOp extends LinearOpMode {
 
     private void report() {
         AutoUtil.ChainTelemetry.assertAndGet()
-                .add("Runtime", System.currentTimeMillis() - this.initTime)
+                //.add("Runtime", System.currentTimeMillis() - this.initTime)
                 .add("Elbow ticks", this.elbow.getCurrentPosition())
                 .add("Elbow target", this.elbow.getTargetPosition())
                 .add("ODOMETRY")
@@ -65,7 +63,6 @@ public class SimpleTeleOp extends LinearOpMode {
     private void tick() {
         this.drivetrain.setFromGamepad();
 
-        //double actuator = AutoUtil.ternaryXOR(AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.INPUT_ACTUATOR_UP), AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.INPUT_ACTUATOR_DOWN));
         double elbow = AutoUtil.ternaryXOR(AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.INPUT_ELBOW_UP), AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.INPUT_ELBOW_DOWN));
         double linearSlide = AutoUtil.ternaryXOR(AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.INPUT_LINEAR_SLIDE_UP), AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.INPUT_LINEAR_SLIDE_DOWN));
 
@@ -73,7 +70,6 @@ public class SimpleTeleOp extends LinearOpMode {
         this.slow.update(AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.SLOW));
 
         if (this.slow.getState()) {
-            //actuator *= GlobalConstants.SLOW_FACTOR;
             linearSlide *= GlobalConstants.SLOW_FACTOR;
 
             elbow *= GlobalConstants.ARM_ELBOW_TICK_MODIFIER * GlobalConstants.SLOW_FACTOR;
@@ -90,10 +86,10 @@ public class SimpleTeleOp extends LinearOpMode {
     }
 
     public void runOpMode() {
-        this.initTime = System.currentTimeMillis();
-
         AutoUtil.setOpMode(this);
         AutoUtil.ChainTelemetry.init(this.telemetry);
+
+        while (this.opModeInInit());
 
         this.initHardware();
 
