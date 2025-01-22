@@ -4,9 +4,14 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.RobotLog;
 
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.autonomous.AutoUtil;
 import org.firstinspires.ftc.teamcode.autonomous.GlobalConstants;
+import org.firstinspires.ftc.teamcode.external.GoBildaPinpointDriver;
+
+import java.util.Locale;
 
 @TeleOp(name="Simple Tele Op")
 public class SimpleTeleOp extends LinearOpMode {
@@ -21,6 +26,8 @@ public class SimpleTeleOp extends LinearOpMode {
     private final AutoUtil.ToggleSwitch clawState = new AutoUtil.ToggleSwitch();
     private final AutoUtil.ToggleSwitch slow = new AutoUtil.ToggleSwitch();
 
+    private GoBildaPinpointDriver odometry;
+
     private void initHardware() {
         this.drivetrain = AutoUtil.Drivetrain.initAndGet(this.hardwareMap);
 
@@ -33,6 +40,8 @@ public class SimpleTeleOp extends LinearOpMode {
         this.elbow.setPower(0.6);
         this.elbow.setTargetPosition(0);
         this.elbow.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        this.odometry = this.hardwareMap.get(GoBildaPinpointDriver.class, GlobalConstants.ODOMETRY_NAME);
     }
 
     private void report() {
@@ -40,7 +49,17 @@ public class SimpleTeleOp extends LinearOpMode {
                 .add("Runtime", System.currentTimeMillis() - this.initTime)
                 .add("Elbow ticks", this.elbow.getCurrentPosition())
                 .add("Elbow target", this.elbow.getTargetPosition())
+                .add("ODOMETRY")
+                .add("X", DistanceUnit.INCH.fromMm(this.odometry.getPosX()))
+                .add("Y", DistanceUnit.INCH.fromMm(this.odometry.getPosY()))
+                .add("Theta", DistanceUnit.INCH.fromMm(this.odometry.getHeading()))
                 .update();
+
+        RobotLog.i(String.format(Locale.UK, "X: %f, Y: %f, Theta: %f",
+                DistanceUnit.INCH.fromMm(this.odometry.getPosX()),
+                DistanceUnit.INCH.fromMm(this.odometry.getPosY()),
+                DistanceUnit.INCH.fromMm(this.odometry.getHeading())
+        ));
     }
 
     private void tick() {

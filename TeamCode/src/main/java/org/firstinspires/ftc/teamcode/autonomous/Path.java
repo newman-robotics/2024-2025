@@ -10,22 +10,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Path {
-    //The headings to set the odometry to *before* moving to the target.
-    private final List<Double> headings;
     //The odometry targets. We move to the point first and then rotate to the desired heading.
     private final List<PathTarget> odometryTargets;
     private final GoBildaPinpointDriver odometry;
     private int stage = 0;
     private int lastX = 0, lastY = 0;
 
-    Path(GoBildaPinpointDriver odometry, List<Double> headings, List<PathTarget> odometryTargets) {
+    Path(GoBildaPinpointDriver odometry, List<PathTarget> odometryTargets) {
         this.odometry = odometry;
-        this.headings = headings;
         this.odometryTargets = odometryTargets;
     }
 
     public boolean isDone() {
-        return this.stage >= this.headings.size();
+        return this.stage >= this.odometryTargets.size();
     }
 
     //maybe (probably) not necessary
@@ -40,7 +37,7 @@ public class Path {
             return;
         }
 
-        double headingTarget = Path.error(this.headings.get(this.stage));
+        double headingTarget = Path.error(this.odometryTargets.get(this.stage).preAngle);
         double headingReading;
 
         do {
@@ -52,7 +49,7 @@ public class Path {
 
             AutoUtil.ChainTelemetry.assertAndGet()
                     .add("Stage", this.getStage())
-                    .add("Total stages", this.headings.size())
+                    .add("Total stages", this.odometryTargets.size())
                     .add("Heading", headingReading)
                     .add("Target heading", headingTarget)
                     .update();
@@ -61,7 +58,7 @@ public class Path {
             else if (headingReading < headingTarget) AutoUtil.Drivetrain.assertAndGet().setPowers(0, 0, -0.2);
         } while (headingReading != headingTarget);
 
-        double distanceTarget = Path.error(this.odometryTargets.get(this.stage).angle);
+        double distanceTarget = Path.error(this.odometryTargets.get(this.stage).distance);
         double distanceReading;
         int tempLastX, tempLastY;
 
@@ -76,7 +73,7 @@ public class Path {
 
             AutoUtil.ChainTelemetry.assertAndGet()
                     .add("Stage", this.getStage())
-                    .add("Total stages", this.headings.size())
+                    .add("Total stages", this.odometryTargets.size())
                     .add("Distance from last pos", distanceReading)
                     .add("Target distance from last pos", distanceTarget)
                     .update();
@@ -101,7 +98,7 @@ public class Path {
 
             AutoUtil.ChainTelemetry.assertAndGet()
                     .add("Stage", this.getStage())
-                    .add("Total stages", this.headings.size())
+                    .add("Total stages", this.odometryTargets.size())
                     .add("Heading", headingReading)
                     .add("Target heading", headingTarget)
                     .update();
@@ -117,10 +114,12 @@ public class Path {
     }
 
     private static class PathTarget {
+        public final double preAngle;
         public final double distance;
         public final double angle;
 
-        public PathTarget(double distance, double angle) {
+        public PathTarget(double preAngle, double distance, double angle) {
+            this.preAngle = preAngle;
             this.distance = distance;
             this.angle = angle;
         }
@@ -145,26 +144,22 @@ public class Path {
         }
 
         public Path build() {
-            List<Double> headings = new ArrayList<>();
-
-            headings.add(Math.atan2(this.positions.get(0).y, this.positions.get(0).x));
-            RobotLog.i("added first heading " + headings.get(0));
+            List<PathTarget> targets = new ArrayList<>();
+            CameraHandler.FieldPos pos = this.positions.get(0);
+            targets.add(new PathTarget(Math.atan2(this.positions.get(0).y, this.positions.get(0).x), pos.x * pos.x + pos.y * pos.y, pos.theta));
 
             for (int i = 0; i < this.positions.size() - 1; ++i) {
-                double rise = this.positions.get(i + 1).y - this.positions.get(i).y;
-                double run = this.positions.get(i + 1).x - this.positions.get(i).x;
+                pos = this.positions.get(i + 1);
+                CameraHandler.FieldPos lastPos = this.positions.get(i);
+
+                double rise = pos.y - lastPos.y;
+                double run = pos.x - lastPos.x;
                 double heading = Math.atan2(rise, run);
-                headings.add(heading);
 
-                RobotLog.i("added heading " + heading);
+                targets.add(new PathTarget(heading, pos.x * pos.x + pos.y * pos.y, pos.theta));
             }
 
-            List<PathTarget> targets = new ArrayList<>();
-            for (CameraHandler.FieldPos pos : this.positions) {
-                targets.add(new PathTarget(pos.x * pos.x + pos.y * pos.y, pos.theta));
-            }
-
-            return new Path(this.odometry, headings, targets);
+            return new Path(this.odometry, targets);
         }
     }
 }
