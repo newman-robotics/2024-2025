@@ -11,14 +11,21 @@ import org.firstinspires.ftc.teamcode.external.GoBildaPinpointDriver;
 public class PathTest extends LinearOpMode {
     Path path;
 
-    private void report() {
-
-    }
-
     @Override
     public void runOpMode() throws InterruptedException {
         AutoUtil.ChainTelemetry.init(this.telemetry);
-        GoBildaPinpointDriver odometry = AutoUtil.Drivetrain.initAndGet(this.hardwareMap).odometry;
+        AutoUtil.Drivetrain.initAndGet(this.hardwareMap);
+
+        /*
+         * +X is backwards
+         * -X is forwards
+         * +Y is right
+         * -Y is left
+         * +THETA is counterclockwise
+         * -THETA is clockwise
+         * */
+        GoBildaPinpointDriver odometry = AutoUtil.Drivetrain.assertAndGet().odometry;
+        odometry.resetPosAndIMU();
 
         this.path = new Path.Builder(odometry)
                 .andThen(new CameraHandler.FieldPos(12, -48, Double.NaN))

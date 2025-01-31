@@ -39,6 +39,7 @@ public class SimpleTeleOp extends LinearOpMode {
         this.elbow.setTargetPosition(20);
 
         this.odometry = this.drivetrain.odometry;
+        this.odometry.resetPosAndIMU();
     }
 
     private void report() {
@@ -75,6 +76,8 @@ public class SimpleTeleOp extends LinearOpMode {
         this.elbow.setTargetPosition(elbowInput);
         this.linearSlide.setPower(linearSlideInput / 1.5);
         this.claw.setPosition(this.clawState.getState() ? 1. : 0.);
+
+        this.odometry.update();
 
         this.report();
     }

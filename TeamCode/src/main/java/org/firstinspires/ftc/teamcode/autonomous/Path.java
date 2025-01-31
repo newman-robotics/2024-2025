@@ -25,10 +25,9 @@ public class Path {
         return this.stage >= this.odometryTargets.size();
     }
 
-    //maybe (probably) not necessary
+    //definitely necessary
     private static double error(double input) {
-        return input;
-        //return Math.round(input * (1 << GlobalConstants.AUTONOMOUS_ACCURACY_BITS));
+        return Math.round(input * (1 << GlobalConstants.AUTONOMOUS_ACCURACY_BITS));
     }
 
     public void runNextStage(LinearOpMode parent) {
@@ -50,8 +49,8 @@ public class Path {
             AutoUtil.ChainTelemetry.assertAndGet()
                     .add("Stage", this.getStage())
                     .add("Total stages", this.odometryTargets.size())
-                    .add("Heading", headingReading)
-                    .add("Target heading", headingTarget)
+                    .add("Heading (degrees) ", Math.toDegrees(headingReading))
+                    .add("Target heading (degrees) ", Math.toDegrees(headingTarget))
                     .update();
 
             if (headingReading > headingTarget) AutoUtil.Drivetrain.assertAndGet().setPowers(0, 0, 0.2);
@@ -99,8 +98,8 @@ public class Path {
             AutoUtil.ChainTelemetry.assertAndGet()
                     .add("Stage", this.getStage())
                     .add("Total stages", this.odometryTargets.size())
-                    .add("Heading", headingReading)
-                    .add("Target heading", headingTarget)
+                    .add("Heading (radians) ", headingReading)
+                    .add("Target heading (radians) ", headingTarget)
                     .update();
 
             AutoUtil.Drivetrain.assertAndGet().setPowers(0, 0, headingReading > headingTarget ? 0.2 : (headingReading < headingTarget ? -0.2 : 0));
@@ -108,12 +107,12 @@ public class Path {
 
         double theta = this.odometryTargets.get(this.stage).angle;
         if (!Double.isNaN(theta)) {
-            headingTarget = Math.round(theta * Math.pow(10, GlobalConstants.AUTONOMOUS_ACCURACY_BITS));
+            headingTarget = Path.error(theta);
 
             do {
                 if (parent.isStopRequested()) return;
 
-                headingReading = Math.round(this.odometry.getHeading() * Math.pow(10, GlobalConstants.AUTONOMOUS_ACCURACY_BITS));
+                headingReading = Path.error(this.odometry.getHeading());
 
                 this.odometry.update();
 
