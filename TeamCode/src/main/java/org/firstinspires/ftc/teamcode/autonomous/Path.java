@@ -119,7 +119,7 @@ public class Path {
 
                 AutoUtil.ChainTelemetry.assertAndGet()
                         .add("Stage", this.getStage())
-                        .add("Total stages", this.headings.size())
+                        .add("Total stages", this.odometryTargets.size())
                         .add("Heading", headingReading)
                         .add("Target heading", headingTarget)
                         .update();
@@ -128,8 +128,6 @@ public class Path {
                     AutoUtil.Drivetrain.assertAndGet().setPowers(0, 0, 0.2);
                 else if (headingReading < headingTarget)
                     AutoUtil.Drivetrain.assertAndGet().setPowers(0, 0, -0.2);
-
-                //RobotLog.i("{Stage=" + this.getStage() + ", TotalStages=" + this.headings.size() + ", Heading=" + this.odometry.getHeading() + ", TargetHeading=" + this.headings.get(this.stage) + "}");
             } while (headingReading != headingTarget);
         }
 

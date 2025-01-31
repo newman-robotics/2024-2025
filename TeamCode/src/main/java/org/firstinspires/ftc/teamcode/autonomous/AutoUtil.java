@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.autonomous;
 
+import android.provider.Settings;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -12,6 +14,11 @@ import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.Func;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
+import org.firstinspires.ftc.robotcore.external.navigation.MotionDetection;
+import org.firstinspires.ftc.teamcode.external.GoBildaPinpointDriver;
+
+import java.util.Vector;
 
 /**
  * Various static functions.
@@ -192,11 +199,16 @@ public class AutoUtil {
 
         private final AutoUtil.ToggleSwitch gamepadSlow = new AutoUtil.ToggleSwitch();
 
+        public GoBildaPinpointDriver odometry;
+
         private Drivetrain(HardwareMap map) {
             this.frontLeft = map.get(DcMotor.class, GlobalConstants.FRONT_LEFT_MOTOR_NAME);
             this.frontRight = map.get(DcMotor.class, GlobalConstants.FRONT_RIGHT_MOTOR_NAME);
             this.backLeft = map.get(DcMotor.class, GlobalConstants.BACK_LEFT_MOTOR_NAME);
             this.backRight = map.get(DcMotor.class, GlobalConstants.BACK_RIGHT_MOTOR_NAME);
+
+            this.odometry = map.get(GoBildaPinpointDriver.class, GlobalConstants.ODOMETRY_NAME);
+            this.odometry.resetPosAndIMU();
 
             this.frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             this.frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -229,6 +241,15 @@ public class AutoUtil {
             double axial = -parseGamepadInputAsDouble(GlobalConstants.AXIAL);
             double lateral = parseGamepadInputAsDouble(GlobalConstants.LATERAL);
             double yaw = parseGamepadInputAsDouble(GlobalConstants.YAW);
+
+            if (GlobalConstants.USE_DOC) {
+                this.odometry.update();
+                double realYaw = this.odometry.getHeading();
+                double cos = Math.cos(realYaw);
+                double sin = Math.sin(realYaw);
+                axial = axial * cos + lateral * sin;
+                lateral = lateral * cos - axial * sin;
+            }
 
             this.gamepadSlow.update(parseGamepadInputAsBoolean(GlobalConstants.SLOW));
 
@@ -411,11 +432,21 @@ public class AutoUtil {
 
     /**
      * Clamps the input to be greater than lower and less than upper.
-     * Specifically, if input.compareTo(upper) > 0, upper is returned, and if input.compareTo(lower) < 0, lower is returned.
+     * The old version was a template and used Comparable.compareTo(), but that may have been a bit wrong...
      * **/
-    public static <T extends Comparable<T>> T clamp(T input, T lower, T upper) {
-        if (input.compareTo(upper) > 0) return upper;
-        if (input.compareTo(lower) < 0) return lower;
+    public static int clamp(int input, int lower, int upper) {
+        if (input < lower) return lower;
+        if (input > upper) return upper;
+        return input;
+    }
+
+    /**
+     * Clamps the input to be greater than lower and less than upper.
+     * The old version was a template and used Comparable.compareTo(), but that may have been a bit wrong...
+     * **/
+    public static double clamp(double input, double lower, double upper) {
+        if (input < lower) return lower;
+        if (input > upper) return upper;
         return input;
     }
 }
