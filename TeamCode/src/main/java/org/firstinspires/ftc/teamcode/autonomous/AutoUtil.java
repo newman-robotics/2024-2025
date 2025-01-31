@@ -265,11 +265,16 @@ public class AutoUtil {
 
     public static class ToggleSwitch {
         private boolean state = false;
+
+        //sets a time when a toggle is called
         private long lastToggleTime = System.currentTimeMillis();
 
+        //checks to see if the current time is greater than the time of the last toggle plus the time we toggle cooldown is
+        //Summary: it checks to see if the toggle cooldown time has passed
         public void update(boolean toggle) {
             if (System.currentTimeMillis() > this.lastToggleTime + GlobalConstants.TOGGLE_SWITCH_COOLDOWN_MS) {
-                this.state = toggle != this.state;
+                this.state = toggle ^ this.state; //??????????????, XOR thingy, this is stupid
+                //resets the lastToggleTime to this toggle
                 this.lastToggleTime = System.currentTimeMillis();
             }
         }

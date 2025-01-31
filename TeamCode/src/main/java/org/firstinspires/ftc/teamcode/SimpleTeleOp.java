@@ -1,5 +1,5 @@
 package org.firstinspires.ftc.teamcode;
-
+//importing things
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -15,6 +15,7 @@ import java.util.Locale;
 
 @TeleOp(name="Simple Tele Op")
 public class SimpleTeleOp extends LinearOpMode {
+    //adds motors n stuff, ask Owen
     private AutoUtil.Drivetrain drivetrain;
     //private DcMotor actuator;
     private DcMotor elbow;
