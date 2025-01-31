@@ -40,6 +40,7 @@ public class SimpleTeleOp extends LinearOpMode {
         this.elbow.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
         this.odometry = this.hardwareMap.get(GoBildaPinpointDriver.class, GlobalConstants.ODOMETRY_NAME);
+        this.odometry.resetPosAndIMU();
     }
 
     private void report() {
@@ -81,6 +82,8 @@ public class SimpleTeleOp extends LinearOpMode {
         this.elbow.setTargetPosition((int)Math.ceil((elbow * 0.8))); //Math.ceil rounds the number
         this.linearSlide.setPower(linearSlide / 1.5);
         this.claw.setPosition(this.clawState.getState() ? 1. : 0.);
+
+        this.odometry.update();
 
         this.report();
     }

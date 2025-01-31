@@ -11,15 +11,19 @@ import org.firstinspires.ftc.teamcode.external.GoBildaPinpointDriver;
 public class PathTest extends LinearOpMode {
     Path path;
 
-    private void report() {
-
-    }
-
     @Override
     public void runOpMode() throws InterruptedException {
         AutoUtil.ChainTelemetry.init(this.telemetry);
         AutoUtil.Drivetrain.initAndGet(this.hardwareMap);
 
+        /*
+         * +X is backwards
+         * -X is forwards
+         * +Y is right
+         * -Y is left
+         * +THETA is counterclockwise
+         * -THETA is clockwise
+         * */
         GoBildaPinpointDriver odometry = this.hardwareMap.get(GoBildaPinpointDriver.class, GlobalConstants.ODOMETRY_NAME);
         odometry.resetPosAndIMU();
 
