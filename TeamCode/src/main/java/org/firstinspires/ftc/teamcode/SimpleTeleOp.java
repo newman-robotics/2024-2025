@@ -27,6 +27,7 @@ public class SimpleTeleOp extends LinearOpMode {
 
     private GoBildaPinpointDriver odometry;
 
+    int elbw = 20;
     private void initHardware() {
         this.drivetrain = AutoUtil.Drivetrain.initAndGet(this.hardwareMap);
 
@@ -36,8 +37,9 @@ public class SimpleTeleOp extends LinearOpMode {
         this.claw = this.hardwareMap.get(Servo.class, GlobalConstants.CLAW_MOTOR_NAME);
 
         this.elbow.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        this.elbow.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        this.elbow.setTargetPosition(20);
+        this.elbow.setTargetPosition(elbw);
+        this.elbow.setMode(DcMotor.RunMode.RUN_TO_POSITION); //this was giving errors
+        this.elbow.setPower(elbw);
 
         this.odometry = this.drivetrain.odometry;
         this.odometry.resetPosAndIMU();
@@ -75,6 +77,7 @@ public class SimpleTeleOp extends LinearOpMode {
         //this.actuator.setPower(actuator);
         RobotLog.i(String.format(Locale.UK, "Elbow input: %d", elbowInput));
         this.elbow.setTargetPosition(elbowInput);
+        elbw = elbowInput;
         this.linearSlide.setPower(linearSlideInput / 1.5);
         this.claw.setPosition(this.clawState.getState() ? 1. : 0.);
 
@@ -90,11 +93,13 @@ public class SimpleTeleOp extends LinearOpMode {
         //I think it's equivalent to `while (this.opModeInInit());`
         this.waitForStart();
 
-        this.initHardware();
-
         //while (this.opModeInInit()) this.report();
 
+        this.initHardware();
+
         while (this.opModeIsActive()) this.tick();
+
+        this.elbow.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
         this.drivetrain.setPowers(0, 0, 0, 0);
     }

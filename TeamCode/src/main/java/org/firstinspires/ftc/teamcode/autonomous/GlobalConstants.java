@@ -103,7 +103,8 @@ public class GlobalConstants {
     public static final GamepadInput SLOW = GamepadInput.LEFT_STICK_BUTTON; // Used to be BUTTON_B
     public static final GamepadInput XVARTESTNEWCODE = GamepadInput.BUTTON_Y;
 
-   // public static final GamepadInput ARM_CLAW_INPUT = GamepadInput.LEFT_STICK_BUTTON; //Used to be RIGHT_STICK_Y
+    public static final GamepadInput ARM_CLAW_INPUT = GamepadInput.DPAD_UP; //Used to be RIGHT_STICK_Y
+
     @Deprecated
     public static final GamepadInput OLD_ARM_ELEVATION_MODIFIER = GamepadInput.LEFT_BUMPER;
     @Deprecated
