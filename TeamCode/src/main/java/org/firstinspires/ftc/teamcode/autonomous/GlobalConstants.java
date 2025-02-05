@@ -121,7 +121,7 @@ public class GlobalConstants {
 
 
     //
-    public static final int ARM_ELBOW_TICK_MODIFIER = 15;
+    public static final int ARM_ELBOW_TICK_MODIFIER = 30;
     public static final double ARM_ELBOW_SPEED = 0.8;
 
     public static final double CLAW_WRIST_POSITION_MODIFIER = 0.01;
