@@ -28,10 +28,10 @@ public class PathTest extends LinearOpMode {
         odometry.resetPosAndIMU();
 
         this.path = new Path.Builder(odometry)
-                .andThen(new CameraHandler.FieldPos(12, -48, Double.NaN))
-                .andThen(new CameraHandler.FieldPos(108, -48, Double.NaN))
-                .andThen(new CameraHandler.FieldPos(108, 48, Double.NaN))
-                .andThen(new CameraHandler.FieldPos(12, 48, Double.NaN))
+                .andThen(new CameraHandler.FieldPos(48, 12, Double.NaN))
+                //.andThen(new CameraHandler.FieldPos(108, -48, Double.NaN))
+                //.andThen(new CameraHandler.FieldPos(108, 48, Double.NaN))
+                //.andThen(new CameraHandler.FieldPos(12, 48, Double.NaN))
                 .andThen(new CameraHandler.FieldPos(0, 0, 0))
                 .build();
 

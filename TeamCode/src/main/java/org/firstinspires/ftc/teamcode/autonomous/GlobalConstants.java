@@ -121,7 +121,7 @@ public class GlobalConstants {
 
 
     //
-    public static final int ARM_ELBOW_TICK_MODIFIER = 30;
+    public static final int ARM_ELBOW_TICK_MODIFIER = 10;
     public static final double ARM_ELBOW_SPEED = 0.8;
 
     public static final double CLAW_WRIST_POSITION_MODIFIER = 0.01;
@@ -179,7 +179,7 @@ public class GlobalConstants {
     public static final int SIMPLE_STARTING_POS_Y = 36;
 
     public static final int AUTONOMOUS_ACCURACY_BITS = 2;
-    public static final int TOGGLE_SWITCH_COOLDOWN_MS = 250;
+    public static final int TOGGLE_SWITCH_COOLDOWN_MS = 350;
 
     //driver-oriented controls
     public static final boolean USE_DOC = false;
