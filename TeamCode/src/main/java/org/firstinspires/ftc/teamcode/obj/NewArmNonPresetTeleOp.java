@@ -13,7 +13,7 @@ import org.firstinspires.ftc.teamcode.autonomous.AutoUtil;
 import org.firstinspires.ftc.teamcode.autonomous.GlobalConstants;
 
 
-@TeleOp(name="The Tele Operation")
+@TeleOp(name="STele")
 public class NewArmNonPresetTeleOp extends LinearOpMode {
 
     // Declare OpMode members for each of the 4 motors.
@@ -39,6 +39,7 @@ public class NewArmNonPresetTeleOp extends LinearOpMode {
 
     @Override
     public void runOpMode() {
+        AutoUtil.setOpMode(this);
 
         // Initialize the hardware variables. Note that the strings used here must correspond
         // to the names assigned during the robot configuration step on the DS or RC devices.

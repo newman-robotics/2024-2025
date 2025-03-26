@@ -1,16 +1,24 @@
 package org.firstinspires.ftc.teamcode.autonomous;
 
+import android.provider.Settings;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.Func;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
+import org.firstinspires.ftc.robotcore.external.navigation.MotionDetection;
+import org.firstinspires.ftc.teamcode.external.GoBildaPinpointDriver;
+
+import java.util.Vector;
 
 /**
  * Various static functions.
@@ -50,6 +58,7 @@ public class AutoUtil {
             return this.counts;
         }
 
+        @NonNull
         @Override
         public String toString() {
             return "Counter(" + this.counts + ")";
@@ -188,11 +197,27 @@ public class AutoUtil {
         private final DcMotor backLeft;
         private final DcMotor backRight;
 
+        private final AutoUtil.ToggleSwitch gamepadSlow = new AutoUtil.ToggleSwitch();
+
+        public GoBildaPinpointDriver odometry;
+
         private Drivetrain(HardwareMap map) {
             this.frontLeft = map.get(DcMotor.class, GlobalConstants.FRONT_LEFT_MOTOR_NAME);
             this.frontRight = map.get(DcMotor.class, GlobalConstants.FRONT_RIGHT_MOTOR_NAME);
             this.backLeft = map.get(DcMotor.class, GlobalConstants.BACK_LEFT_MOTOR_NAME);
             this.backRight = map.get(DcMotor.class, GlobalConstants.BACK_RIGHT_MOTOR_NAME);
+
+            this.odometry = map.get(GoBildaPinpointDriver.class, GlobalConstants.ODOMETRY_NAME);
+            this.odometry.resetPosAndIMU();
+
+            this.frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            this.frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            this.backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            this.backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+            this.frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+            this.backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+            this.backRight.setDirection(DcMotorSimple.Direction.REVERSE);
         }
 
         public void setPowers(double frontLeft, double frontRight, double backLeft, double backRight) {
@@ -202,23 +227,60 @@ public class AutoUtil {
             this.backRight.setPower(backRight);
         }
 
+        //note: x is lateral, y is axial, ignore the constants
+        public void setPowers(double x, double y, double theta) {
+            this.setPowers(
+                    x + y + theta,
+                    x - y - theta,
+                    x - y + theta,
+                    x + y - theta
+            );
+        }
+
         public void setFromGamepad() {
             double axial = -parseGamepadInputAsDouble(GlobalConstants.AXIAL);
             double lateral = parseGamepadInputAsDouble(GlobalConstants.LATERAL);
             double yaw = parseGamepadInputAsDouble(GlobalConstants.YAW);
 
-            if (parseGamepadInputAsBoolean(GlobalConstants.SLOW)) {
+            if (GlobalConstants.USE_DOC) {
+                this.odometry.update();
+                double realYaw = this.odometry.getHeading();
+                double cos = Math.cos(realYaw);
+                double sin = Math.sin(realYaw);
+                axial = axial * cos + lateral * sin;
+                lateral = lateral * cos - axial * sin;
+            }
+
+            this.gamepadSlow.update(parseGamepadInputAsBoolean(GlobalConstants.SLOW));
+
+            if (this.gamepadSlow.getState()) {
                 axial *= GlobalConstants.SLOW_FACTOR;
                 lateral *= GlobalConstants.SLOW_FACTOR;
                 yaw *= GlobalConstants.SLOW_FACTOR;
             }
 
-            this.setPowers(
-                    axial + lateral + yaw,
-                    axial - lateral - yaw,
-                    axial - lateral + yaw,
-                    axial + lateral - yaw
-            );
+            this.setPowers(axial, lateral, yaw);
+        }
+    }
+
+    public static class ToggleSwitch {
+        private boolean state = false;
+
+        //sets a time when a toggle is called
+        private long lastToggleTime = System.currentTimeMillis();
+
+        //checks to see if the current time is greater than the time of the last toggle plus the time we toggle cooldown is
+        //Summary: it checks to see if the toggle cooldown time has passed
+        public void update(boolean toggle) {
+            if (System.currentTimeMillis() > this.lastToggleTime + GlobalConstants.TOGGLE_SWITCH_COOLDOWN_MS) {
+                this.state = toggle ^ this.state; //??????????????, XOR thingy, this is stupid
+                //resets the lastToggleTime to this toggle
+                this.lastToggleTime = System.currentTimeMillis();
+            }
+        }
+
+        public boolean getState() {
+            return this.state;
         }
     }
 
@@ -304,13 +366,6 @@ public class AutoUtil {
     }
 
     /**
-     * Clamps in to the range [lower, upper].
-     * **/
-    public static double clamp(double in, double lower, double upper) {
-        return Math.min(Math.max(in, lower), upper);
-    }
-
-    /**
      * Gets an input from AutoUtil.opMode.gamepad1.
      * @param input The input to measure.
      * @return The raw value if the input is a double, or value ? 1.0 : 0.0 if the value is a boolean.
@@ -378,5 +433,25 @@ public class AutoUtil {
             oneFound = true;
         }
         return true;
+    }
+
+    /**
+     * Clamps the input to be greater than lower and less than upper.
+     * The old version was a template and used Comparable.compareTo(), but that may have been a bit wrong...
+     * **/
+    public static int clamp(int input, int lower, int upper) {
+        if (input < lower) return lower;
+        if (input > upper) return upper;
+        return input;
+    }
+
+    /**
+     * Clamps the input to be greater than lower and less than upper.
+     * The old version was a template and used Comparable.compareTo(), but that may have been a bit wrong...
+     * **/
+    public static double clamp(double input, double lower, double upper) {
+        if (input < lower) return lower;
+        if (input > upper) return upper;
+        return input;
     }
 }

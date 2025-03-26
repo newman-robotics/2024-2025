@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.autonomous;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.RobotLog;
 
@@ -13,6 +14,7 @@ import org.firstinspires.ftc.teamcode.external.GoBildaPinpointDriver;
 
 import java.util.concurrent.atomic.AtomicReference;
 
+@Disabled
 @Autonomous(name="PinpointTest")
 public class PinpointTest extends LinearOpMode {
     public static GoBildaPinpointDriver odometry;
@@ -73,7 +75,7 @@ public class PinpointTest extends LinearOpMode {
             isFallback = false;
         } else {
             if (!allowFallback) throw new RuntimeException(new AutoUtil.OpModeInterruptedException("OpMode interrupted in init!"));
-            PinpointTest.odometry.setPosition(new GoBildaPinpointDriver.Pose2D(DistanceUnit.INCH, 0, 0, AngleUnit.RADIANS, 0));
+            PinpointTest.odometry.setPosition(new GoBildaPinpointDriver.Pose2D(DistanceUnit.INCH, GlobalConstants.SIMPLE_STARTING_POS_X, GlobalConstants.SIMPLE_STARTING_POS_Y, AngleUnit.RADIANS, 0));
             isFallback = true;
         }
 
