@@ -100,10 +100,11 @@ public class GlobalConstants {
     public static final GamepadInput AXIAL = GamepadInput.LEFT_STICK_X;
     public static final GamepadInput LATERAL = GamepadInput.LEFT_STICK_Y;
     public static final GamepadInput YAW = GamepadInput.RIGHT_STICK_X;
-    public static final GamepadInput SLOW = GamepadInput.RIGHT_STICK_BUTTON; // Used to be BUTTON_B
+    public static final GamepadInput SLOW = GamepadInput.LEFT_STICK_BUTTON; // Used to be BUTTON_B
     public static final GamepadInput XVARTESTNEWCODE = GamepadInput.BUTTON_Y;
 
-    public static final GamepadInput ARM_CLAW_INPUT = GamepadInput.LEFT_STICK_BUTTON; //Used to be RIGHT_STICK_Y
+    public static final GamepadInput ARM_CLAW_INPUT = GamepadInput.DPAD_UP; //Used to be RIGHT_STICK_Y
+
     @Deprecated
     public static final GamepadInput OLD_ARM_ELEVATION_MODIFIER = GamepadInput.LEFT_BUMPER;
     @Deprecated
@@ -120,7 +121,7 @@ public class GlobalConstants {
 
 
     //
-    public static final double ARM_ELBOW_TICK_MODIFIER = 5.0;
+    public static final int ARM_ELBOW_TICK_MODIFIER = 10;
     public static final double ARM_ELBOW_SPEED = 0.8;
 
     public static final double CLAW_WRIST_POSITION_MODIFIER = 0.01;
@@ -169,7 +170,7 @@ public class GlobalConstants {
     public static final GamepadInput INPUT_ELBOW_DOWN = GamepadInput.LEFT_TRIGGER; //Used to be RIGHT_TRIGGER
     public static final GamepadInput INPUT_LINEAR_SLIDE_UP = GamepadInput.LEFT_BUMPER; //Used to be LEFT_BUMPER
     public static final GamepadInput INPUT_LINEAR_SLIDE_DOWN = GamepadInput.RIGHT_BUMPER; //Used to be LEFT_TRIGGER LEFT_TRIGGER
-    public static final GamepadInput INPUT_CLAW = GamepadInput.LEFT_STICK_BUTTON; //Used to be BUTTON_Y
+    public static final GamepadInput INPUT_CLAW = GamepadInput.RIGHT_STICK_BUTTON; //Used to be BUTTON_Y
 
     public static final int ELBOW_TICK_LOWER_BOUND = 20;
     public static final int ELBOW_TICK_UPPER_BOUND = 500;
@@ -178,5 +179,8 @@ public class GlobalConstants {
     public static final int SIMPLE_STARTING_POS_Y = 36;
 
     public static final int AUTONOMOUS_ACCURACY_BITS = 2;
-    public static final int TOGGLE_SWITCH_COOLDOWN_MS = 50;
+    public static final int TOGGLE_SWITCH_COOLDOWN_MS = 350;
+
+    //driver-oriented controls
+    public static final boolean USE_DOC = false;
 }

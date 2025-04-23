@@ -24,15 +24,14 @@ public class PathTest extends LinearOpMode {
          * +THETA is counterclockwise
          * -THETA is clockwise
          * */
-        GoBildaPinpointDriver odometry = this.hardwareMap.get(GoBildaPinpointDriver.class, GlobalConstants.ODOMETRY_NAME);
-        odometry.setOffsets(0, -5);
+        GoBildaPinpointDriver odometry = AutoUtil.Drivetrain.assertAndGet().odometry;
         odometry.resetPosAndIMU();
 
         this.path = new Path.Builder(odometry)
-                .andThen(new CameraHandler.FieldPos(12, -48, Double.NaN))
-                .andThen(new CameraHandler.FieldPos(108, -48, Double.NaN))
-                .andThen(new CameraHandler.FieldPos(108, 48, Double.NaN))
-                .andThen(new CameraHandler.FieldPos(12, 48, Double.NaN))
+                .andThen(new CameraHandler.FieldPos(48, 12, Double.NaN))
+                //.andThen(new CameraHandler.FieldPos(108, -48, Double.NaN))
+                //.andThen(new CameraHandler.FieldPos(108, 48, Double.NaN))
+                //.andThen(new CameraHandler.FieldPos(12, 48, Double.NaN))
                 .andThen(new CameraHandler.FieldPos(0, 0, 0))
                 .build();
 

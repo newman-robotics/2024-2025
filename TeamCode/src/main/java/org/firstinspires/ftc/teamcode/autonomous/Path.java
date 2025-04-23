@@ -8,6 +8,7 @@ import org.firstinspires.ftc.teamcode.external.GoBildaPinpointDriver;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class Path {
     //The odometry targets. We move to the point first and then rotate to the desired heading.
@@ -53,11 +54,13 @@ public class Path {
                     .add("Target heading (degrees) ", Math.toDegrees(headingTarget))
                     .update();
 
+            RobotLog.i(String.format(Locale.UK, "[RAD] Cur: %f\t\t -> Tar: %f", headingReading, headingTarget));
+
             if (headingReading > headingTarget) AutoUtil.Drivetrain.assertAndGet().setPowers(0, 0, 0.2);
             else if (headingReading < headingTarget) AutoUtil.Drivetrain.assertAndGet().setPowers(0, 0, -0.2);
         } while (headingReading != headingTarget);
 
-        double distanceTarget = Path.error(this.odometryTargets.get(this.stage).distance);
+        double distanceTarget = this.odometryTargets.get(this.stage).distance;
         double distanceReading;
         int tempLastX, tempLastY;
 
@@ -66,7 +69,7 @@ public class Path {
 
             int x = (int)DistanceUnit.INCH.fromMm(this.odometry.getPosX()) - this.lastX;
             int y = (int)DistanceUnit.INCH.fromMm(this.odometry.getPosY()) - this.lastY;
-            distanceReading = Path.error(x * x + y * y);
+            distanceReading = x * x + y * y;
 
             this.odometry.update();
 
@@ -77,11 +80,13 @@ public class Path {
                     .add("Target distance from last pos", distanceTarget)
                     .update();
 
+            RobotLog.i(String.format(Locale.UK, "[MMS] Cur: %f\t\t -> Tar: %f", distanceReading, distanceTarget));
+
             AutoUtil.Drivetrain.assertAndGet().setPowers(0., -0.2, 0.);
 
             tempLastX = x;
             tempLastY = y;
-        } while (distanceReading != distanceTarget);
+        } while (distanceReading < distanceTarget);
 
         this.lastX = tempLastX;
         this.lastY = tempLastY;
@@ -102,35 +107,10 @@ public class Path {
                     .add("Target heading (radians) ", headingTarget)
                     .update();
 
+            RobotLog.i(String.format(Locale.UK, "[RAD] Cur: %f\t\t -> Tar: %f", headingReading, headingTarget));
+
             AutoUtil.Drivetrain.assertAndGet().setPowers(0, 0, headingReading > headingTarget ? 0.2 : (headingReading < headingTarget ? -0.2 : 0));
         } while (headingReading != headingTarget);
-
-        double theta = this.odometryTargets.get(this.stage).angle;
-        if (!Double.isNaN(theta)) {
-            headingTarget = Path.error(theta);
-
-            do {
-                if (parent.isStopRequested()) return;
-
-                headingReading = Path.error(this.odometry.getHeading());
-
-                this.odometry.update();
-
-                AutoUtil.ChainTelemetry.assertAndGet()
-                        .add("Stage", this.getStage())
-                        .add("Total stages", this.odometryTargets.size())
-                        .add("Heading", headingReading)
-                        .add("Target heading", headingTarget)
-                        .update();
-
-                if (headingReading > headingTarget)
-                    AutoUtil.Drivetrain.assertAndGet().setPowers(0, 0, 0.2);
-                else if (headingReading < headingTarget)
-                    AutoUtil.Drivetrain.assertAndGet().setPowers(0, 0, -0.2);
-
-                //RobotLog.i("{Stage=" + this.getStage() + ", TotalStages=" + this.headings.size() + ", Heading=" + this.odometry.getHeading() + ", TargetHeading=" + this.headings.get(this.stage) + "}");
-            } while (headingReading != headingTarget);
-        }
 
         ++this.stage;
     }

@@ -1,5 +1,5 @@
 package org.firstinspires.ftc.teamcode;
-
+//importing things
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -15,6 +15,7 @@ import java.util.Locale;
 
 @TeleOp(name="Simple Tele Op")
 public class SimpleTeleOp extends LinearOpMode {
+    //adds motors n stuff, ask Owen
     private AutoUtil.Drivetrain drivetrain;
     //private DcMotor actuator;
     private DcMotor elbow;
@@ -35,11 +36,11 @@ public class SimpleTeleOp extends LinearOpMode {
         this.claw = this.hardwareMap.get(Servo.class, GlobalConstants.CLAW_MOTOR_NAME);
 
         this.elbow.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        this.elbow.setPower(0.6);
-        this.elbow.setTargetPosition(0);
+        this.elbow.setPower(0.5);
+        this.elbow.setTargetPosition(20);
         this.elbow.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-        this.odometry = this.hardwareMap.get(GoBildaPinpointDriver.class, GlobalConstants.ODOMETRY_NAME);
+        this.odometry = this.drivetrain.odometry;
         this.odometry.resetPosAndIMU();
     }
 
@@ -53,34 +54,29 @@ public class SimpleTeleOp extends LinearOpMode {
                 .add("Y", DistanceUnit.INCH.fromMm(this.odometry.getPosY()))
                 .add("Theta", DistanceUnit.INCH.fromMm(this.odometry.getHeading()))
                 .update();
-
-        RobotLog.i(String.format(Locale.UK, "X: %f, Y: %f, Theta: %f",
-                DistanceUnit.INCH.fromMm(this.odometry.getPosX()),
-                DistanceUnit.INCH.fromMm(this.odometry.getPosY()),
-                DistanceUnit.INCH.fromMm(this.odometry.getHeading())
-        ));
     }
 
     private void tick() {
         this.drivetrain.setFromGamepad();
 
-        double elbow = AutoUtil.ternaryXOR(AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.INPUT_ELBOW_UP), AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.INPUT_ELBOW_DOWN));
-        double linearSlide = AutoUtil.ternaryXOR(AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.INPUT_LINEAR_SLIDE_UP), AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.INPUT_LINEAR_SLIDE_DOWN));
+        int elbowInput = (int)AutoUtil.ternaryXOR(AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.INPUT_ELBOW_UP), AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.INPUT_ELBOW_DOWN));
+        double linearSlideInput = AutoUtil.ternaryXOR(AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.INPUT_LINEAR_SLIDE_UP), AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.INPUT_LINEAR_SLIDE_DOWN));
 
         this.clawState.update(AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.INPUT_CLAW));
         this.slow.update(AutoUtil.parseGamepadInputAsBoolean(GlobalConstants.SLOW));
 
         if (this.slow.getState()) {
-            linearSlide *= GlobalConstants.SLOW_FACTOR;
+            linearSlideInput *= GlobalConstants.SLOW_FACTOR;
 
-            elbow *= GlobalConstants.ARM_ELBOW_TICK_MODIFIER * GlobalConstants.SLOW_FACTOR;
-        } else elbow *= GlobalConstants.ARM_ELBOW_TICK_MODIFIER;
+            elbowInput *= (int)(GlobalConstants.ARM_ELBOW_TICK_MODIFIER * GlobalConstants.SLOW_FACTOR);
+        } else elbowInput *= GlobalConstants.ARM_ELBOW_TICK_MODIFIER;
 
-        elbow += AutoUtil.clamp(this.elbow.getTargetPosition(), GlobalConstants.ELBOW_TICK_LOWER_BOUND, GlobalConstants.ELBOW_TICK_UPPER_BOUND);
+        elbowInput += AutoUtil.clamp(this.elbow.getTargetPosition(), GlobalConstants.ELBOW_TICK_LOWER_BOUND, GlobalConstants.ELBOW_TICK_UPPER_BOUND);
 
         //this.actuator.setPower(actuator);
-        this.elbow.setTargetPosition((int)Math.ceil((elbow * 0.8))); //Math.ceil rounds the number
-        this.linearSlide.setPower(linearSlide / 1.5);
+        RobotLog.i(String.format(Locale.UK, "Elbow target ticks: %d", elbowInput));
+        this.elbow.setTargetPosition(elbowInput);
+        this.linearSlide.setPower(linearSlideInput / 1.5);
         this.claw.setPosition(this.clawState.getState() ? 1. : 0.);
 
         this.odometry.update();
@@ -92,11 +88,10 @@ public class SimpleTeleOp extends LinearOpMode {
         AutoUtil.setOpMode(this);
         AutoUtil.ChainTelemetry.init(this.telemetry);
 
-        while (this.opModeInInit());
+        //I think it's equivalent to `while (this.opModeInInit());`
+        this.waitForStart();
 
         this.initHardware();
-
-        while (this.opModeInInit()) this.report();
 
         while (this.opModeIsActive()) this.tick();
 
