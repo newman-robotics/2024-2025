@@ -25,6 +25,7 @@ public class PathTest extends LinearOpMode {
          * -THETA is clockwise
          * */
         GoBildaPinpointDriver odometry = this.hardwareMap.get(GoBildaPinpointDriver.class, GlobalConstants.ODOMETRY_NAME);
+        odometry.setOffsets(0, -5);
         odometry.resetPosAndIMU();
 
         this.path = new Path.Builder(odometry)

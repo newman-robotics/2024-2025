@@ -36,6 +36,8 @@ android {
 dependencies {
     implementation project(':FtcRobotController')
 
+    implementation fileTree(dir: "libs", include: "*.jar")
+
     //compileOnly 'systems.manifold:manifold-preprocessor:2024.1.37'
     //annotationProcessor 'systems.manifold:manifold-preprocessor'
     //testAnnotationProcessor 'systems.manifold:manifold-preprocessor'
